@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-NCMS.Backend.Worker-e3b5ddca-4e80-4a30-b173-ad2d7edddeb1</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NCMS.Backend.Core\NCMS.Backend.Core.csproj" />
+    <ProjectReference Include="..\NCMS.Backend.Infrastructure\NCMS.Backend.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,48 @@
+
+# ========================
+# .NET Backend
+# ========================
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.log
+appsettings.Development.json
+appsettings.Production.json
+temp_device.*
+temp_ca.crt
+publish/
+ncms-backend/publish/
+
+# ========================
+# Frontend (Vue / Node)
+# ========================
+node_modules/
+dist/
+.env
+.env.*
+*.local
+
+# ========================
+# Infra / Docker
+# ========================
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+
+# ========================
+# OS / Editor
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ========================
+# Documentation and Scripts
+# ========================
+*.md
+*.ps1

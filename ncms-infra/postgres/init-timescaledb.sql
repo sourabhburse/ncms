@@ -1,1 +1,2 @@
-ÿþ
+-- Placeholder for TimescaleDB bootstrap.
+-- Keep this file tracked even before DB objects are finalized.

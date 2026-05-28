@@ -1,0 +1,14 @@
+[Unit]
+Description=NCMS Mosquitto Broker
+After=network.target
+
+[Service]
+Type=simple
+User=mosquitto
+Group=mosquitto
+ExecStart=/usr/sbin/mosquitto -c /etc/mosquitto-ncms/mosquitto.conf
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

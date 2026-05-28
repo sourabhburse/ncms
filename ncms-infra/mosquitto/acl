@@ -1,0 +1,11 @@
+# %u maps to certificate identity (CN) when use_identity_as_username is true.
+
+pattern write d/%u/telemetry
+pattern write d/%u/heartbeat
+pattern write d/%u/cmd/res
+pattern write d/%u/config/res
+pattern write d/%u/ota/res
+
+pattern read d/%u/cmd
+pattern read d/%u/config
+pattern read d/%u/ota

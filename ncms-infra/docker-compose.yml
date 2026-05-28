@@ -1,1 +1,33 @@
-ÿþ
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: ncms-mosquitto
+    restart: unless-stopped
+    ports:
+      - "8883:8883"
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/acl:/mosquitto/config/acl:ro
+      - ./mosquitto/certs:/mosquitto/certs:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: ncms-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ncms
+      POSTGRES_PASSWORD: ncms_secure_pass
+      POSTGRES_DB: ncms
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres/init-timescaledb.sql:/docker-entrypoint-initdb.d/init-timescaledb.sql:ro
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  pg_data:

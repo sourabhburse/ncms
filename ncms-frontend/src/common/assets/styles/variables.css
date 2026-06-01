@@ -1,0 +1,94 @@
+
+:root {
+  /* Body */
+  --v3-body-text-color: var(--el-text-color-primary);
+  --v3-body-bg-color: var(--el-bg-color-page);
+ 
+  --v3-header-height: calc(
+    var(--v3-navigationbar-height) + var(--v3-tagsview-height) + var(--v3-header-border-bottom-width)
+  );
+  --v3-header-bg-color: var(--el-bg-color);
+  --v3-header-box-shadow: var(--el-box-shadow-lighter);
+  --v3-header-border-bottom-width: 1px;
+  --v3-header-border-bottom: var(--v3-header-border-bottom-width) solid var(--el-fill-color);
+
+  --v3-navigationbar-height: 60px;
+  --v3-navigationbar-text-color: var(--el-text-color-regular);
+
+  --v3-sidebar-width: 240px;
+  --v3-sidebar-hide-width: 54px;
+  /* Aliases used by TagsView width calc and context-menu margin */
+  --sideBarWidth: var(--v3-sidebar-width);
+  --miniSideBarWidth: var(--v3-sidebar-hide-width);
+
+  /* Sidebar design tokens */
+  --menuBg: #fff;
+  --menuText: #101828;
+  --menuActiveText: #2e90fa;
+  --menuHover: #2e90fa;
+  --menuHoverText: #fff;
+  --subMenuBg: #fff;
+  --subMenuActiveText: #2e90fa;
+  --subMenuHover: #2e90fa;
+  --subMenuHoverText: #fff;
+  --subMenuActiveHoverText: #2e90fa;
+
+  /* el-menu Element Plus overrides */
+  --el-menu-text-color: var(--menuText);
+  --el-menu-hover-text-color: var(--menuText);
+  --el-menu-bg-color: var(--menuBg);
+  --el-menu-hover-bg-color: var(--menuHover);
+  --el-menu-active-color: var(--menuActiveText);
+  --el-menu-item-height: 48px;
+
+  --v3-sidebar-border-right: 1px solid var(--el-fill-color);
+  --v3-sidebar-menu-item-height: 48px;
+  --v3-sidebar-menu-tip-line-bg-color: var(--menuActiveText);
+  --v3-sidebar-menu-bg-color: var(--menuBg);
+  --v3-sidebar-menu-hover-bg-color: var(--menuHover);
+  --v3-sidebar-menu-text-color: var(--menuText);
+  --v3-sidebar-menu-active-text-color: var(--menuActiveText);
+
+  --v3-tagsview-height: 40px;
+  --v3-tagsview-text-color: var(--el-text-color-regular);
+  --v3-tagsview-tag-active-text-color: #ffffff;
+  --v3-tagsview-tag-bg-color: var(--el-bg-color);
+  --v3-tagsview-tag-active-bg-color: var(--el-color-primary);
+  --v3-tagsview-tag-border-radius: 2px;
+  --v3-tagsview-tag-border-color: var(--el-border-color-lighter);
+  --v3-tagsview-tag-active-border-color: var(--el-color-primary);
+  --v3-tagsview-tag-icon-hover-bg-color: #00000030;
+  --v3-tagsview-tag-icon-hover-color: #ffffff;
+  --v3-tagsview-contextmenu-text-color: var(--el-text-color-regular);
+  --v3-tagsview-contextmenu-hover-text-color: var(--el-text-color-primary);
+  --v3-tagsview-contextmenu-bg-color: var(--el-bg-color-overlay);
+  --v3-tagsview-contextmenu-hover-bg-color: var(--el-fill-color);
+  --v3-tagsview-contextmenu-box-shadow: var(--el-box-shadow);
+ 
+  --v3-hamburger-text-color: var(--el-text-color-primary);
+  --v3-rightpanel-button-bg-color: #001428;
+}
+
+
+body.content-large {
+
+  --v3-header-height: var(--v3-tagsview-height);
+
+  --v3-navigationbar-height: 0px;
+
+  --v3-sidebar-width: 0px;
+  --v3-sidebar-hide-width: 0px;
+}
+
+
+body.content-full {
+
+  --v3-header-height: 0px;
+
+  --v3-navigationbar-height: 0px;
+
+  --v3-sidebar-width: 0px;
+  --v3-sidebar-hide-width: 0px;
+
+  --v3-tagsview-height: 0px;
+}

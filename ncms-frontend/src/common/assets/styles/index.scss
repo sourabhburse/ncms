@@ -1,0 +1,62 @@
+
+@import "./variables.css";
+// Transition
+@import "./transition.scss";
+// Element Plus
+@import "./element-plus.css";
+@import "./element-plus.scss";
+// Vxe Table
+@import "./vxe-table.css";
+@import "./vxe-table.scss";
+
+@import "./theme/register.scss";
+// Mixins
+@import "./mixins.scss";
+// Shared UI primitives — page header/toolbar and modal dialog
+@import "./page";
+@import "./dialog";
+// View Transition
+@import "./view-transition.scss";
+
+.app-container {
+  padding: 20px;
+}
+
+html {
+  height: 100%;
+
+  &.grey-mode {
+    filter: grayscale(1);
+  }
+
+  &.color-weakness {
+    filter: invert(0.8);
+  }
+}
+
+body {
+  height: 100%;
+  color: var(--v3-body-text-color);
+  background-color: var(--v3-body-bg-color);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  @extend %scrollbar;
+}
+
+#app {
+  height: 100%;
+}
+
+
+a,
+a:focus,
+a:hover {
+  color: inherit;
+  outline: none;
+  text-decoration: none;
+}
+
+div:focus {
+  outline: none;
+}

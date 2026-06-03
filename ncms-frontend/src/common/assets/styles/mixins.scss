@@ -1,0 +1,52 @@
+
+%clearfix {
+  &::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+}
+
+
+%scrollbar {
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  // Remove arrow buttons so the track runs all the way to the container edge
+  &::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #d3dce6;
+    margin: 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 20px;
+    background: #99a9bf;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: darken(#99a9bf, 10%);
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+
+%ellipsis {
+
+  overflow: hidden;
+
+  white-space: nowrap;
+ 
+  text-overflow: ellipsis;
+}

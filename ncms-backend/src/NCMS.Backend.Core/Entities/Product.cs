@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace NCMS.Backend.Core.Entities;
 
@@ -19,5 +20,6 @@ public sealed class Product
     public int? FlashSizeMB { get; set; }
     public int? RamSizeMB { get; set; }
     public string? Description { get; set; }
+    public List<ProductIdentityPolicy> SupportedIdentityPolicies { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -27,6 +27,16 @@ builder.Services.Configure<ProvisioningOptions>(builder.Configuration.GetSection
 builder.Services.AddSingleton<IDeviceCertificateIssuer, PersistentDeviceCertificateIssuer>();
 builder.Services.AddScoped<IProvisioningService, ProvisioningService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Perform migration and seeding on startup
@@ -54,6 +64,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 

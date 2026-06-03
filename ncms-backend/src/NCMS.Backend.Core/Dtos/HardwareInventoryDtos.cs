@@ -22,6 +22,24 @@ public record CreateHardwareInventoryRequest(
     Dictionary<string, string?> IdentityClaims
 );
 
+public record CreateHardwareInventoryBatchRequest(
+    IReadOnlyList<CreateHardwareInventoryRequest> Items
+);
+
+public record DeleteHardwareInventoryBatchRequest(
+    IReadOnlyList<Guid> Ids
+);
+
+public record HardwareInventoryBatchResponse(
+    int Count,
+    IReadOnlyList<HardwareInventoryResponse> Items
+);
+
+public record HardwareInventoryDeleteBatchResponse(
+    int Count,
+    IReadOnlyList<Guid> DeletedIds
+);
+
 public record UpdateHardwareInventoryRequest(
     string Status,
     string IdentityPolicy,

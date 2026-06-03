@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace NCMS.Backend.Infrastructure.Data;
 
-public sealed class NcmsDbContext : DbContext
+public class NcmsDbContext : DbContext
 {
     public NcmsDbContext(DbContextOptions<NcmsDbContext> options)
         : base(options)

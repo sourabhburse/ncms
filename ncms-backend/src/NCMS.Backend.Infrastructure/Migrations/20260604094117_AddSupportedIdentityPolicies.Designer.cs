@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NCMS.Backend.Core.Entities;
 using NCMS.Backend.Infrastructure.Data;
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NCMS.Backend.Infrastructure.Migrations
 {
     [DbContext(typeof(NcmsDbContext))]
-    partial class NcmsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260604094117_AddSupportedIdentityPolicies")]
+    partial class AddSupportedIdentityPolicies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

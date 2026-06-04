@@ -149,11 +149,17 @@ public sealed class HardwareInventoryController : ControllerBase
 
     [HttpPost("import-csv")]
     public async Task<IActionResult> ImportCsv(
-        [FromForm] Microsoft.AspNetCore.Http.IFormFile file,
-        [FromForm] Guid productId,
-        [FromForm] Guid tenantId,
+        [FromForm] ImportHardwareInventoryCsvRequest request,
         CancellationToken cancellationToken)
     {
+        if (request is null)
+        {
+            return BadRequest(new { error = "Request is required." });
+        }
+
+        var file = request.File;
+        var productId = request.ProductId;
+        var tenantId = request.TenantId;
         if (file is null || file.Length == 0)
         {
             return BadRequest(new { error = "CSV file is required." });
@@ -455,4 +461,11 @@ public sealed class HardwareInventoryController : ControllerBase
 
         return NoContent();
     }
+}
+
+public class ImportHardwareInventoryCsvRequest
+{
+    public Microsoft.AspNetCore.Http.IFormFile File { get; set; } = null!;
+    public Guid ProductId { get; set; }
+    public Guid TenantId { get; set; }
 }

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using NCMS.Backend.Core.Entities;
 
 namespace NCMS.Backend.Core.Dtos;
 
@@ -10,6 +12,7 @@ public record ProductResponse(
     string Architecture,
     string ConfigFormat,
     string ConfigSchemaVersion,
+    List<ProductIdentityPolicy> SupportedIdentityPolicies,
     DateTime CreatedAt
 );
 
@@ -18,12 +21,14 @@ public record CreateProductRequest(
     string ModelName,
     string Architecture,
     string ConfigFormat,
-    string ConfigSchemaVersion
+    string ConfigSchemaVersion,
+    List<ProductIdentityPolicy> SupportedIdentityPolicies
 );
 
 public record UpdateProductRequest(
     string ModelName,
     string Architecture,
     string ConfigFormat,
-    string ConfigSchemaVersion
+    string ConfigSchemaVersion,
+    List<ProductIdentityPolicy> SupportedIdentityPolicies
 );

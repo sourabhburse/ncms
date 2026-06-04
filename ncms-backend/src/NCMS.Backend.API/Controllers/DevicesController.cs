@@ -22,13 +22,55 @@ public sealed class DevicesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] Guid? tenantId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] Guid? tenantId, [FromQuery] bool includeTelemetry = false, CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Devices.AsQueryable();
 
         if (tenantId.HasValue)
         {
             query = query.Where(d => d.TenantId == tenantId.Value);
+        }
+
+        if (includeTelemetry)
+        {
+            var devicesWithTelemetry = await query
+                .Select(d => new DeviceWithLatestTelemetryResponse(
+                    d.Id,
+                    d.HardwareInventoryId,
+                    d.HardwareInventory != null ? d.HardwareInventory.SerialNumber : null,
+                    d.TenantId,
+                    d.Name,
+                    d.Status,
+                    d.LastSeenAt,
+                    d.CurrentFirmwareVersion,
+                    d.CurrentAgentVersion,
+                    d.WanIpAddress,
+                    d.MacAddresses,
+                    d.Latitude,
+                    d.Longitude,
+                    d.Notes,
+                    d.Telemetries
+                        .OrderByDescending(t => t.Timestamp)
+                        .Select(t => new DeviceTelemetryResponse(
+                            t.Id,
+                            t.DeviceId,
+                            t.Timestamp,
+                            t.CpuUsagePercent,
+                            t.RamUsageMb,
+                            t.RamTotalMb,
+                            t.StorageUsedMb,
+                            t.StorageTotalMb,
+                            t.UptimeSeconds,
+                            t.WanIp,
+                            t.TemperatureCelsius,
+                            t.SignalStrengthRssi,
+                            t.SignalQualityRsrp))
+                        .FirstOrDefault(),
+                    d.CreatedAt,
+                    d.UpdatedAt))
+                .ToListAsync(cancellationToken);
+
+            return Ok(devicesWithTelemetry);
         }
 
         var devices = await query

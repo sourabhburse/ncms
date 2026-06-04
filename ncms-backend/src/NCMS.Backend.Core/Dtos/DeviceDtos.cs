@@ -22,6 +22,26 @@ public record DeviceResponse(
     DateTime UpdatedAt
 );
 
+public record DeviceWithLatestTelemetryResponse(
+    Guid Id,
+    Guid HardwareInventoryId,
+    string? SerialNumber,
+    Guid TenantId,
+    string? Name,
+    string Status,
+    DateTime? LastSeenAt,
+    string? CurrentFirmwareVersion,
+    string? CurrentAgentVersion,
+    string? WanIpAddress,
+    Dictionary<string, string> MacAddresses,
+    decimal? Latitude,
+    decimal? Longitude,
+    string? Notes,
+    DeviceTelemetryResponse? LatestTelemetry,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
+);
+
 public record CreateDeviceRequest(
     Guid HardwareInventoryId,
     Guid TenantId,

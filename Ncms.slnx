@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Ncms.Core/Ncms.Core.csproj" />
+  <Project Path="Ncms.Identity.Contracts/Ncms.Identity.Contracts.csproj" />
+  <Project Path="Ncms.Identity/Ncms.Identity.csproj" />
+  <Project Path="Ncms.Persistence/Ncms.Persistence.csproj" />
+  <Project Path="Ncms.Shared/Ncms.Shared.csproj" />
+  <Project Path="Ncms.Web/Ncms.Web.csproj" />
+  <Project Path="Ncms/Ncms.csproj" />
+</Solution>

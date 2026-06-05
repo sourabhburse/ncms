@@ -34,7 +34,7 @@ public sealed class ProductsController : ControllerBase
         var products = await query
             .Select(p => new ProductResponse(
                 p.Id, p.VendorId, p.Vendor != null ? p.Vendor.Name : null, p.ModelName,
-                p.Architecture, p.ConfigFormat, p.ConfigSchemaVersion, p.CreatedAt))
+                p.Architecture, p.ConfigFormat, p.ConfigSchemaVersion, p.SupportedIdentityPolicies, p.CreatedAt))
             .ToListAsync(cancellationToken);
 
         return Ok(products);
@@ -51,7 +51,7 @@ public sealed class ProductsController : ControllerBase
 
         return Ok(new ProductResponse(
             product.Id, product.VendorId, product.Vendor != null ? product.Vendor.Name : null, product.ModelName,
-            product.Architecture, product.ConfigFormat, product.ConfigSchemaVersion, product.CreatedAt));
+            product.Architecture, product.ConfigFormat, product.ConfigSchemaVersion, product.SupportedIdentityPolicies, product.CreatedAt));
     }
 
     [HttpPost]
@@ -69,7 +69,8 @@ public sealed class ProductsController : ControllerBase
             ModelName = request.ModelName,
             Architecture = request.Architecture,
             ConfigFormat = request.ConfigFormat,
-            ConfigSchemaVersion = request.ConfigSchemaVersion
+            ConfigSchemaVersion = request.ConfigSchemaVersion,
+            SupportedIdentityPolicies = request.SupportedIdentityPolicies ?? new()
         };
 
         _dbContext.Products.Add(product);
@@ -79,7 +80,7 @@ public sealed class ProductsController : ControllerBase
 
         var response = new ProductResponse(
             product.Id, product.VendorId, vendor?.Name, product.ModelName,
-            product.Architecture, product.ConfigFormat, product.ConfigSchemaVersion, product.CreatedAt);
+            product.Architecture, product.ConfigFormat, product.ConfigSchemaVersion, product.SupportedIdentityPolicies, product.CreatedAt);
 
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, response);
     }
@@ -94,6 +95,7 @@ public sealed class ProductsController : ControllerBase
         product.Architecture = request.Architecture;
         product.ConfigFormat = request.ConfigFormat;
         product.ConfigSchemaVersion = request.ConfigSchemaVersion;
+        product.SupportedIdentityPolicies = request.SupportedIdentityPolicies ?? new();
 
         _dbContext.Products.Update(product);
         await _dbContext.SaveChangesAsync(cancellationToken);

@@ -1,0 +1,74 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared modal dialog styles
+//
+// Usage: add class="app-dialog" to any <el-dialog> to get standardized styling.
+//
+//   <el-dialog class="app-dialog" width="680px" … >
+//     <el-form … />
+//     <template #footer>
+//       <div class="app-dialog__footer"> … </div>
+//     </template>
+//   </el-dialog>
+// ─────────────────────────────────────────────────────────────────────────────
+
+.app-dialog {
+
+  // ── Header ─────────────────────────────────────────────────────────────────
+  .el-dialog__header {
+    margin: 0;
+    padding: 16px 20px;
+    background-color: #eff6ff;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    border-radius: var(--el-dialog-border-radius, 8px) var(--el-dialog-border-radius, 8px) 0 0;
+  }
+
+  .el-dialog__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    line-height: 1.4;
+  }
+
+  .el-dialog__headerbtn {
+    top: 14px;
+    right: 16px;
+
+    .el-dialog__close { font-size: 16px; }
+  }
+
+  // ── Body ───────────────────────────────────────────────────────────────────
+  .el-dialog__body {
+    padding: 24px 28px 12px;
+  }
+
+  // ── Form inside dialog ─────────────────────────────────────────────────────
+  .el-form {
+    .el-form-item {
+      margin-bottom: 20px;
+
+      &:last-child { margin-bottom: 0; }
+    }
+
+    .el-form-item__label {
+      font-size: 13px;
+      color: var(--el-text-color-regular);
+      font-weight: 500;
+    }
+  }
+
+  // ── Footer ─────────────────────────────────────────────────────────────────
+  .el-dialog__footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--el-border-color-lighter);
+    background-color: var(--el-fill-color-extra-light);
+    border-radius: 0 0 var(--el-dialog-border-radius, 8px) var(--el-dialog-border-radius, 8px);
+  }
+}
+
+// ── Footer action row (use inside <template #footer>) ─────────────────────────
+.app-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}

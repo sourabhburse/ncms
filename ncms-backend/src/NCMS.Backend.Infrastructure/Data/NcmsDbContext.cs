@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace NCMS.Backend.Infrastructure.Data;
 
-public sealed class NcmsDbContext : DbContext
+public class NcmsDbContext : DbContext
 {
     public NcmsDbContext(DbContextOptions<NcmsDbContext> options)
         : base(options)
@@ -50,6 +50,10 @@ public sealed class NcmsDbContext : DbContext
             entity.Property(p => p.Architecture).IsRequired();
             entity.Property(p => p.ConfigFormat).IsRequired();
             entity.Property(p => p.ConfigSchemaVersion).HasDefaultValue("1.0");
+
+            entity.Property(p => p.SupportedIdentityPolicies)
+                .HasColumnType("jsonb")
+                .HasDefaultValueSql("'[]'::jsonb");
 
             entity.HasOne(p => p.Vendor)
                 .WithMany()

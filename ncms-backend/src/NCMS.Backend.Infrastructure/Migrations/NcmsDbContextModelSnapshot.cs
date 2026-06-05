@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NCMS.Backend.Core.Entities;
 using NCMS.Backend.Infrastructure.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -283,6 +284,12 @@ namespace NCMS.Backend.Infrastructure.Migrations
 
                     b.Property<int?>("RamSizeMB")
                         .HasColumnType("integer");
+
+                    b.Property<List<ProductIdentityPolicy>>("SupportedIdentityPolicies")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'[]'::jsonb");
 
                     b.Property<Guid>("VendorId")
                         .HasColumnType("uuid");

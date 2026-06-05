@@ -1,0 +1,175 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared page-level layout primitives
+// Styling sourced from Untitled.css (.pageHead / .pageHead-btns)
+//
+// NOTE: This is a global SCSS file — do NOT use :deep() here.
+//       All Element Plus overrides use regular descendant selectors.
+//
+// Breakpoints:
+//   xs  < 480px   sm  < 768px   md  < 1024px   lg ≥ 1024px (base)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 20px 20px 16px;
+  background-color: var(--el-bg-color);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: clamp(16px, 2.5vw, 20px);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--el-text-color-primary);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__extra {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 1023px) { padding: 16px 16px 12px; }
+
+  @media (max-width: 767px) {
+    padding: 14px 14px 10px;
+    gap: 8px;
+    &__subtitle { white-space: normal; }
+    &__extra    { width: 100%; justify-content: flex-start; }
+  }
+
+  @media (max-width: 479px) {
+    padding: 12px 12px 8px;
+    &__title    { font-size: 16px; }
+    &__subtitle { font-size: 12px; }
+  }
+}
+
+// ── Page toolbar ──────────────────────────────────────────────────────────────
+// Source: Untitled.css → .pageHead .pageHead-btns
+// ─────────────────────────────────────────────────────────────────────────────
+.page-toolbar {
+  width: 100%;
+  padding: 10px;
+  background-color: #f8f9fe;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  margin-bottom: 2px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+
+  // ── Action buttons ────────────────────────────────────────────────────────
+  &__actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+
+    .el-button {
+      vertical-align: top;
+      margin: 3px 10px 3px 0;
+    }
+  }
+
+  // ── Search input — fixed 405 px width (Untitled.css source) ──────────────
+  &__search {
+    width: 405px;
+    max-width: 405px;
+    flex-shrink: 0;
+    margin: 3px 10px 3px 0;
+
+    // el-input wrapper height
+    .el-input__wrapper {
+      height: 28px;
+      padding: 0 5px;
+      border-radius: 4px 0 0 4px;
+      box-shadow: 0 0 0 1px var(--el-border-color) inset;
+    }
+
+    .el-input__inner {
+      height: 28px;
+      line-height: 28px;
+      padding: 0 5px;
+      font-size: 13px;
+    }
+
+    // Append button — source: Untitled.css → .el-input-group__append
+    .el-input-group__append {
+      padding: 0;
+      background-color: #757679;
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px;
+      border: none;
+      box-shadow: none;
+
+      .el-button {
+        vertical-align: middle;
+        margin: unset;
+        min-width: unset;
+        width: 50px;
+        height: 28px;
+        background: transparent;
+        border: none;
+        color: #fff;
+
+        &:hover { background-color: #626265; }
+
+        .el-icon,
+        svg {
+          font-size: 16px;
+          color: #fff !important;
+        }
+      }
+    }
+  }
+
+  // ── md: tablets ──────────────────────────────────────────────────────────
+  @media (max-width: 1023px) {
+    padding: 8px 10px;
+    &__search { width: 300px; max-width: 300px; }
+  }
+
+  // ── sm: phones — search on its own row ───────────────────────────────────
+  @media (max-width: 767px) {
+    flex-wrap: wrap;
+    padding: 8px 10px;
+
+    &__actions { flex: 0 0 auto; }
+
+    &__search {
+      width: 100%;
+      max-width: 100%;
+      flex-shrink: 1;
+      margin: 6px 0 3px;
+    }
+  }
+
+  // ── xs ────────────────────────────────────────────────────────────────────
+  @media (max-width: 479px) {
+    padding: 6px 8px;
+  }
+}

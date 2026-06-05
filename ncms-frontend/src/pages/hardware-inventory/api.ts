@@ -2,6 +2,7 @@ import { request } from "@/http/axios"
 
 // ── Domain types ───────────────────────────────────────────────────────────────
 
+
 export interface Product {
   id: string
   vendorId: string
@@ -25,6 +26,7 @@ export interface HardwareInventoryItem {
   productId: string
   productName?: string
   serialNumber: string
+  status?: string
   identityPolicy: string
   identityClaims: Record<string, string>
   createdAt?: string
@@ -33,8 +35,16 @@ export interface HardwareInventoryItem {
 
 /** POST /hardware-inventory request body (tenantId excluded — managed by backend) */
 export interface CreateHardwareInventoryPayload {
+  tenantId: string
   productId: string
   serialNumber: string
+  identityPolicy: string
+  identityClaims: Record<string, string>
+}
+
+/** PUT /hardware-inventory/{id} request body. */
+export interface UpdateHardwareInventoryPayload {
+  status: string
   identityPolicy: string
   identityClaims: Record<string, string>
 }
@@ -56,6 +66,11 @@ export function createHardwareInventory(payload: CreateHardwareInventoryPayload)
   return request<HardwareInventoryItem>({ url: "/hardware-inventory", method: "post", data: payload })
 }
 
+/** Update a hardware inventory entry's status / identity policy / claims. */
+export function updateHardwareInventory(id: string, payload: UpdateHardwareInventoryPayload) {
+  return request<HardwareInventoryItem>({ url: `/hardware-inventory/${id}`, method: "put", data: payload })
+}
+
 /** Delete a single hardware inventory entry by id. */
 export function deleteHardwareInventory(id: string) {
   return request<void>({ url: `/hardware-inventory/${id}`, method: "delete" })
@@ -63,7 +78,30 @@ export function deleteHardwareInventory(id: string) {
 
 /** Delete multiple hardware inventory entries in one call. */
 export function deleteHardwareInventoryBatch(ids: string[]) {
-  return request<void>({ url: "/hardware-inventory", method: "delete", data: { ids } })
+  return request<void>({ url: "/hardware-inventory/batch", method: "delete", data: { ids } })
+}
+
+/** Download the CSV import template for a product (returns the file as a Blob). */
+export function downloadHardwareInventoryTemplate(productId: string) {
+  return request<Blob>({
+    url: "/hardware-inventory/template",
+    method: "get",
+    params: { productId },
+    responseType: "blob"
+  })
+}
+
+/** Bulk-import hardware inventory entries from a CSV file (multipart/form-data). */
+export function importHardwareInventoryCsv(payload: { file: File, productId: string, tenantId: string }) {
+  const formData = new FormData()
+  formData.append("File", payload.file)
+  formData.append("ProductId", payload.productId)
+  formData.append("TenantId", payload.tenantId)
+  return request<unknown>({
+    url: "/hardware-inventory/import-csv",
+    method: "post",
+    data: formData
+  })
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

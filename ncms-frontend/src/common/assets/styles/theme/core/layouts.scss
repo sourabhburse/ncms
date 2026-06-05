@@ -1,7 +1,7 @@
-// Layout 相关
+// Layout related
 
 .app-wrapper {
-  // 侧边栏
+  // Sidebar
   .sidebar-container {
     background-color: var(--el-bg-color);
     .el-menu {
@@ -28,7 +28,7 @@
   }
 }
 
-// 右侧设置面板
+// Right-side settings panel
 .handle-button {
   background-color: lighten($theme-bg-color, 20%) !important;
 }

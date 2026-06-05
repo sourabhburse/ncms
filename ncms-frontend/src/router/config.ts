@@ -11,8 +11,3 @@ export const routerConfig: RouterConfig = {
       ? createWebHashHistory(import.meta.env.VITE_PUBLIC_PATH)
       : createWebHistory(import.meta.env.VITE_PUBLIC_PATH)
 }
-
-// [AUTH HOOK] Restore when implementing auth:
-// dynamic: boolean              — enable role-based dynamic routes
-// defaultRoles: string[]        — fallback roles when dynamic is disabled
-// thirdLevelRouteCache: boolean — flatten 3+ level routes to 2 levels

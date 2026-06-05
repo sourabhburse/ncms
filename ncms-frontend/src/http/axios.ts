@@ -8,10 +8,6 @@ function createInstance() {
   // ── Request interceptor ──────────────────────────────────────────────────
   instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-      // [AUTH HOOK] Inject bearer token when implementing auth:
-      // import { getToken } from "@@/utils/local-storage"
-      // const token = getToken()
-      // if (token) config.headers.Authorization = `Bearer ${token}`
       return config
     },
     (error: AxiosError) => Promise.reject(error)
@@ -30,18 +26,12 @@ function createInstance() {
 
       if (code === 0) return apiData
 
-      // [AUTH HOOK] Handle token expiry when implementing auth:
-      // if (code === 401) { useUserStore().logout(); router.push("/login"); return }
-
       ElMessage.error(apiData.message || "Request failed")
       return Promise.reject(new Error(apiData.message || "Error"))
     },
     (error: AxiosError<{ message?: string }>) => {
       const status = error.response?.status
       const serverMessage = error.response?.data?.message
-
-      // [AUTH HOOK] Handle 401 when implementing auth:
-      // if (status === 401) { useUserStore().logout(); router.push("/login"); return }
 
       const statusMessages: Record<number, string> = {
         400: "Bad Request (400)",
@@ -56,7 +46,8 @@ function createInstance() {
         505: "HTTP Version Not Supported (505)"
       }
 
-      error.message = serverMessage || statusMessages[status] || `Connection Error (${status ?? "unknown"})`
+      const statusMessage = status === undefined ? undefined : statusMessages[status]
+      error.message = serverMessage || statusMessage || `Connection Error (${status ?? "unknown"})`
       ElMessage.error(error.message)
       return Promise.reject(error)
     }
@@ -70,15 +61,19 @@ function createRequest(instance: AxiosInstance) {
     const defaultConfig: AxiosRequestConfig = {
       baseURL: import.meta.env.VITE_BASE_URL,
       headers: {
-        // [AUTH HOOK] Add Authorization header here when implementing auth:
-        // "Authorization": token ? `Bearer ${token}` : undefined,
         "Content-Type": "application/json"
       },
       data: {},
       timeout: 5000,
       withCredentials: false
     }
-    return instance(merge(defaultConfig, config))
+    const finalConfig = merge(defaultConfig, config)
+    // For multipart uploads, drop the JSON content-type so the browser can set
+    // `multipart/form-data` together with the required boundary.
+    if (finalConfig.data instanceof FormData) {
+      delete (finalConfig.headers as Record<string, unknown>)["Content-Type"]
+    }
+    return instance(finalConfig)
   }
 }
 

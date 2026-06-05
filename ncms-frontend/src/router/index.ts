@@ -2,7 +2,6 @@ import type { RouteRecordRaw } from "vue-router"
 import { createRouter } from "vue-router"
 import { routerConfig } from "@/router/config"
 import { setRouteChange } from "@@/composables/useRouteListener"
-import {Cpu } from "@element-plus/icons-vue"
 
 const Layouts = () => import("@/layouts/index.vue")
 
@@ -44,7 +43,47 @@ export const constantRoutes: RouteRecordRaw[] = [
         path: "",
         component: () => import("@/pages/hardware-inventory/index.vue"),
         name: "HardwareInventory",
-        meta: { title: "Hardware Inventory", elIcon: Cpu }
+        meta: { title: "Hardware Inventory", elIcon: "Cpu" }
+      }
+    ]
+  },
+  {
+    path: "/devices",
+    component: Layouts,
+    children: [
+      {
+        path: "",
+        component: () => import("@/pages/devices/index.vue"),
+        name: "Devices",
+        meta: { title: "Devices", elIcon: "Monitor" }
+      }
+    ]
+  },
+  {
+    // Device details — reached from the Devices table View action; hidden from sidebar
+    path: "/devices/:id",
+    component: Layouts,
+    meta: { hidden: true },
+    children: [
+      {
+        path: "",
+        component: () => import("@/pages/devices/detail.vue"),
+        name: "DeviceDetails",
+        meta: { title: "Device Details", hidden: true }
+      }
+    ]
+  },
+  {
+    // Accessed from Hardware Inventory rows — hidden from sidebar
+    path: "/telemetry",
+    component: Layouts,
+    meta: { hidden: true },
+    children: [
+      {
+        path: ":serialNumber",
+        component: () => import("@/pages/telemetry/index.vue"),
+        name: "Telemetry",
+        meta: { title: "Telemetry", elIcon: "DataLine", hidden: true }
       }
     ]
   },
@@ -55,10 +94,6 @@ export const constantRoutes: RouteRecordRaw[] = [
     alias: "/:pathMatch(.*)*"
   }
 ]
-
-// [AUTH HOOK] Restore when implementing RBAC:
-// export const dynamicRoutes: RouteRecordRaw[] = [...]
-// export function resetRouter() { router.getRoutes().forEach(...) }
 
 export const router = createRouter({
   history: routerConfig.history,

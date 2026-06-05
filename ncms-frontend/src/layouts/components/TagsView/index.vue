@@ -3,7 +3,6 @@ import type { RouteLocationNormalizedGeneric, RouteRecordRaw, RouterLink } from 
 import type { TagView } from "@/pinia/stores/tags-view"
 import { useRouteListener } from "@@/composables/useRouteListener"
 import { ArrowDown, Close, DArrowLeft, DArrowRight, RefreshRight } from "@element-plus/icons-vue"
-import path from "path-browserify"
 import { useTagsViewStore } from "@/pinia/stores/tags-view"
 import { useAppStore } from "@/pinia/stores/app"
 import { constantRoutes } from "@/router"
@@ -25,7 +24,6 @@ const containerStyle = computed(() => ({
 }))
 
 const scrollbarRef = useTemplateRef<InstanceType<typeof import("element-plus")["ElScrollbar"]>>("scrollbarRef")
-const scrollContentRef = useTemplateRef<HTMLElement>("scrollContentRef")
 const tagRefs = useTemplateRef<InstanceType<typeof RouterLink>[]>("tagRefs")
 
 let currentScrollLeft = 0
@@ -53,11 +51,16 @@ const currentTag = computed<TagView>(
 
 let affixTags: TagView[] = []
 
+function resolveRoutePath(basePath: string, routePath: string) {
+  if (routePath.startsWith("/")) return routePath
+  return `/${[basePath, routePath].filter(Boolean).join("/")}`.replace(/\/+/g, "/")
+}
+
 function filterAffixTags(routes: RouteRecordRaw[], basePath = "/") {
   const tags: TagView[] = []
   routes.forEach((r) => {
     if (r.meta?.affix) {
-      const tagPath = path.resolve(basePath, r.path)
+      const tagPath = resolveRoutePath(basePath, r.path)
       tags.push({ fullPath: tagPath, path: tagPath, name: r.name, meta: { ...r.meta } })
     }
     if (r.children) tags.push(...filterAffixTags(r.children, r.path))
@@ -252,7 +255,7 @@ onUnmounted(() => {
         @scroll="handleScroll"
         @wheel.passive="handleWheel"
       >
-        <div ref="scrollContentRef" class="scroll-inner">
+        <div class="scroll-inner">
           <router-link
             v-for="tag in tagsViewStore.visitedViews"
             ref="tagRefs"

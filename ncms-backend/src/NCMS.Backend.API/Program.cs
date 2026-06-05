@@ -26,6 +26,17 @@ builder.Services.AddDbContext<NcmsDbContext>(options =>
 builder.Services.Configure<ProvisioningOptions>(builder.Configuration.GetSection("Provisioning"));
 builder.Services.AddSingleton<IDeviceCertificateIssuer, PersistentDeviceCertificateIssuer>();
 builder.Services.AddScoped<IProvisioningService, ProvisioningService>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("cors",
+                      policy =>
+                      {
+                          policy.AllowAnyOrigin()
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
+
 
 builder.Services.AddCors(options =>
 {

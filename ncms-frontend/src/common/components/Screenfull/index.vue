@@ -31,7 +31,7 @@ const fullscreenSvgName = computed(() => (isFullscreen.value ? "fullscreen-exit"
 
 function handleFullscreenClick() {
   const dom = document.querySelector(element) || undefined
-  isEnabled ? screenfull.toggle(dom) : ElMessage.warning("您的浏览器无法工作")
+  isEnabled ? screenfull.toggle(dom) : ElMessage.warning("Your browser does not support full screen mode")
 }
 
 function handleFullscreenChange() {
@@ -54,7 +54,7 @@ watchEffect(() => {
 
 const isContentLarge = ref<boolean>(false)
 
-const contentLargeTips = computed(() => (isContentLarge.value ? "内容区复原" : "内容区放大"))
+const contentLargeTips = computed(() => (isContentLarge.value ? "Restore content area" : "Enlarge content area"))
 
 const contentLargeSvgName = computed(() => (isContentLarge.value ? "fullscreen-exit" : "fullscreen"))
 

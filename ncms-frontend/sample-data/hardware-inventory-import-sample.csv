@@ -1,0 +1,4 @@
+SerialNumber,IdentityPolicy,Claim_mac
+SN-IMPORT-XE-33-001,serial_only,
+SN-IMPORT-XE-33-002,mac_claim,AA:BB:CC:DD:EE:02
+SN-IMPORT-XE-33-003,mac_claim,AA:BB:CC:DD:EE:03

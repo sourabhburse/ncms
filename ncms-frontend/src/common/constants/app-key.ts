@@ -1,14 +1,10 @@
 
-export enum DeviceEnum {
-  Mobile,
-  Desktop
-}
+export const DeviceEnum = {
+  Mobile: 0,
+  Desktop: 1
+} as const
 
-export enum LayoutModeEnum {
-  Left = "left",
-  Top = "top",
-  LeftTop = "left-top"
-}
+export type DeviceEnum = typeof DeviceEnum[keyof typeof DeviceEnum]
 
 export const SIDEBAR_OPENED = "opened"
 

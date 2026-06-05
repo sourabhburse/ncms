@@ -5,16 +5,6 @@ import type { SidebarClosed, SidebarOpened } from "@@/constants/app-key"
 import type { TagView } from "@/pinia/stores/tags-view"
 import { CacheKey } from "@@/constants/cache-key"
 
-// [AUTH HOOK] Restore when implementing auth:
-// export function getToken() { return localStorage.getItem(CacheKey.TOKEN) }
-// export function setToken(token: string) { localStorage.setItem(CacheKey.TOKEN, token) }
-// export function removeToken() { localStorage.removeItem(CacheKey.TOKEN) }
-
-// [SETTINGS HOOK] Restore when adding settings store:
-// export function getLayoutsConfig() { ... }
-// export function setLayoutsConfig(settings: LayoutsConfig) { ... }
-// export function removeLayoutsConfig() { localStorage.removeItem(CacheKey.CONFIG_LAYOUT) }
-
 // #region Sidebar status
 export function getSidebarStatus() {
   return localStorage.getItem(CacheKey.SIDEBAR_STATUS)
@@ -36,22 +26,12 @@ export function setActiveThemeName(themeName: ThemeName) {
 // #endregion
 
 // #region Tags view
-export function getVisitedViews() {
-  const json = localStorage.getItem(CacheKey.VISITED_VIEWS)
-  return JSON.parse(json ?? "[]") as TagView[]
-}
-
 export function setVisitedViews(views: TagView[]) {
   views.forEach((view) => {
     delete view.matched
     delete view.redirectedFrom
   })
   localStorage.setItem(CacheKey.VISITED_VIEWS, JSON.stringify(views))
-}
-
-export function getCachedViews() {
-  const json = localStorage.getItem(CacheKey.CACHED_VIEWS)
-  return JSON.parse(json ?? "[]") as string[]
 }
 
 export function setCachedViews(views: string[]) {

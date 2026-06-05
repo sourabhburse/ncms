@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { RouteRecordRaw } from "vue-router"
 import { isExternal } from "@@/utils/validate"
-import path from "path-browserify"
 
 interface Props {
   item: RouteRecordRaw
@@ -29,7 +28,8 @@ const theOnlyOneChild = computed<RouteRecordRaw | null>(() => {
 function resolvePath(routePath: string) {
   if (isExternal(routePath)) return routePath
   if (isExternal(basePath)) return basePath
-  return path.resolve(basePath, routePath)
+  if (routePath.startsWith("/")) return routePath
+  return `/${[basePath, routePath].filter(Boolean).join("/")}`.replace(/\/+/g, "/")
 }
 
 const itemId = computed(() => String(item.name ?? basePath ?? item.path))

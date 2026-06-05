@@ -10,8 +10,8 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@/*": ["src/*"],
-      "@@/*": ["src/common/*"]
+      "@/*": ["./src/*"],
+      "@@/*": ["./src/common/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx","**/*.d.ts", "src/**/*.vue"]

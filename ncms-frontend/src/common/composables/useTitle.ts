@@ -1,4 +1,4 @@
-/** 项目标题 */
+/** Project title */
 const VITE_APP_TITLE = import.meta.env.VITE_APP_TITLE ?? "V3 Admin Vite"
 
 

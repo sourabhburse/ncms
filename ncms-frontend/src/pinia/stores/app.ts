@@ -1,6 +1,5 @@
 import { DeviceEnum, SIDEBAR_CLOSED, SIDEBAR_OPENED } from "@@/constants/app-key"
 import { getSidebarStatus, setSidebarStatus } from "@@/utils/local-storage"
-import { pinia } from "@/pinia"
 
 interface Sidebar {
   opened: boolean
@@ -43,8 +42,3 @@ export const useAppStore = defineStore("app", () => {
 
   return { device, sidebar, toggleSidebar, closeSidebar, toggleDevice }
 })
-
-
-export function useAppStoreOutside() {
-  return useAppStore(pinia)
-}

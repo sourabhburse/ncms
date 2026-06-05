@@ -2,10 +2,7 @@
 import Screenfull from "@@/components/Screenfull/index.vue"
 import SearchMenu from "@@/components/SearchMenu/index.vue"
 import ThemeSwitch from "@@/components/ThemeSwitch/index.vue"
-import {UserFilled } from "@element-plus/icons-vue"
-// import logoSrc from "@@/assets/images/layouts/logo.png?url"
-
-// const notificationCount = ref(0)
+import { UserFilled } from "@element-plus/icons-vue"
 </script>
 
 <template>
@@ -13,7 +10,6 @@ import {UserFilled } from "@element-plus/icons-vue"
     <!-- Left: logo + platform name -->
     <div class="logo-area">
       <router-link to="/" class="logo-link">
-        <!-- <img :src="logoSrc" class="logo-icon" /> -->
         <span class="platform-name">NCMS Platform</span>
       </router-link>
     </div>
@@ -24,21 +20,10 @@ import {UserFilled } from "@element-plus/icons-vue"
       <Screenfull class="ctrl-item" />
       <ThemeSwitch class="ctrl-item" />
 
-      <!-- <el-badge :value="notificationCount" :hidden="notificationCount === 0" class="ctrl-item bell">
-        <el-icon :size="20"><Bell /></el-icon>
-      </el-badge> -->
-
-      <el-dropdown class="ctrl-item" trigger="click">
-        <div class="user-info">
-          <el-avatar :icon="UserFilled" :size="32" />
-          <span class="username">Admin</span>
-        </div>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <!-- [AUTH HOOK] Add logout item here when implementing auth -->
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+      <div class="ctrl-item user-info">
+        <el-avatar :icon="UserFilled" :size="32" />
+        <span class="username">Admin</span>
+      </div>
     </div>
   </div>
 </template>
@@ -73,12 +58,6 @@ import {UserFilled } from "@element-plus/icons-vue"
       text-decoration: none;
       color: #fff;
 
-      .logo-icon {
-        height: 30px;
-        width: auto;
-        object-fit: contain;
-      }
-
       .platform-name {
         font-size: 16px;
         font-weight: 600;
@@ -103,10 +82,6 @@ import {UserFilled } from "@element-plus/icons-vue"
       height: 100%;
       font-size: 18px;
       color: #fff;
-
-      &.bell {
-        padding: 0 12px;
-      }
 
       &:hover {
         background: rgba(255, 255, 255, 0.12);

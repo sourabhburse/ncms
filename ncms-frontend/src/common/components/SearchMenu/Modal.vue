@@ -120,11 +120,11 @@ function handleEnter() {
   const name = activeRouteName.value
   const path = result.value.find(item => item.name === name)?.path
   if (path && isExternal(path)) return window.open(path, "_blank", "noopener, noreferrer")
-  if (!name) return ElMessage.warning("无法通过搜索进入该菜单，请为对应的路由设置唯一的 Name")
+  if (!name) return ElMessage.warning("Cannot open this menu from search. Please set a unique Name for the corresponding route.")
   try {
     router.push({ name })
   } catch {
-    return ElMessage.warning("该菜单有必填的动态参数，无法通过搜索进入")
+    return ElMessage.warning("This menu has required dynamic parameters and cannot be opened from search.")
   }
   handleClose()
 }

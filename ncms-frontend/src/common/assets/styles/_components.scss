@@ -1,0 +1,109 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared component primitives — the design-system "API" for pages.
+//
+// Apply these classes instead of re-declaring the same styling per page. This
+// is a GLOBAL scss file, so Element Plus internals are targeted with normal
+// descendant selectors (no :deep needed). Values come from the Tailwind @theme
+// tokens in src/style.css via var(--token).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Card / panel surface ────────────────────────────────────────────────────
+.app-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+// ── Data table — was triplicated across devices/hardware-inventory/history ──
+.app-table {
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  box-shadow: var(--shadow-table);
+
+  .el-table__row td {
+    background-color: var(--color-table-row);
+    border-bottom: 2px solid var(--color-surface);
+  }
+
+  .el-table__header th {
+    background-color: var(--color-table-header);
+    border-bottom: none;
+    font-size: var(--text-body);
+    font-weight: 600;
+    color: #333;
+  }
+
+  .el-table--enable-row-hover .el-table__body tr:hover > td {
+    background-color: var(--color-table-row-hover) !important;
+  }
+}
+
+// ── Section header (accent bar + title) ─────────────────────────────────────
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding-bottom: 14px;
+  margin-bottom: var(--spacing-6);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+
+  &__bar {
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background-color: var(--el-color-primary);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--text-subtitle);
+    font-weight: 700;
+    color: var(--el-text-color-primary);
+  }
+}
+
+// ── Monospace cell (serial numbers, codes, IPs, timestamps) ─────────────────
+.app-mono {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: var(--text-body);
+}
+
+// ── Tab bar — was duplicated as `.details-tab` in telemetry + device detail ──
+.app-tabs {
+  .el-tabs__header {
+    margin-bottom: 0;
+    background-color: var(--el-bg-color);
+    border-bottom: 1px solid var(--el-border-color-lighter);
+  }
+
+  .el-tabs__nav-wrap {
+    padding: 0 var(--spacing-4);
+
+    &::after {
+      height: 1px;
+      background-color: var(--color-border-subtle);
+    }
+  }
+
+  .el-tabs__item {
+    font-size: var(--text-body);
+    padding: 0 14px;
+    height: 40px;
+    line-height: 40px;
+    color: var(--el-text-color-regular);
+
+    &.is-active {
+      color: var(--el-color-primary);
+      font-weight: 500;
+    }
+
+    &:hover:not(.is-active) {
+      color: var(--el-color-primary);
+    }
+  }
+
+  .el-tabs__content {
+    padding: var(--spacing-4);
+    background-color: var(--el-fill-color-extra-light);
+  }
+}

@@ -1,1 +1,67 @@
 @import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * NCMS design tokens (Tailwind v4 @theme)
+ *
+ * Single source of truth for the app's design language. Tailwind generates BOTH
+ * CSS variables (var(--color-surface-sunken), …) AND utility classes
+ * (bg-surface-sunken, p-4, rounded-card, shadow-card, …) from these, so pages
+ * and global SCSS primitives reference the same values.
+ *
+ * Element Plus keeps its own --el-* variables; these --app/* tokens cover the
+ * gaps EP doesn't (app surfaces, the data-table palette, spacing rhythm, etc).
+ * ─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* ── Brand / status colors (kept in step with Element Plus) ─────────────── */
+  --color-brand: #2e90fa;
+  --color-brand-soft: #eaf2ff; /* tinted brand surface (tiles, accents) */
+  --color-success: #67c23a;
+  --color-warning: #e6a23c;
+  --color-danger: #f56c6c;
+  --color-info: #909399;
+
+  /* ── Surfaces & borders ─────────────────────────────────────────────────── */
+  --color-surface: #ffffff; /* cards, panels */
+  --color-surface-sunken: #f7f7f7; /* table rows, muted blocks */
+  --color-surface-muted: #f8f9fe; /* toolbars */
+  --color-border-subtle: #f2f2ff; /* hairline dividers (tab underline) */
+
+  /* ── Data-table palette (was triplicated across pages) ──────────────────── */
+  --color-table-header: #eef0f6;
+  --color-table-row: #f7f7f7;
+  --color-table-row-hover: #eaf8ff;
+
+  /* ── Spacing scale (4px rhythm) ─────────────────────────────────────────── */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+
+  /* ── Radii ──────────────────────────────────────────────────────────────── */
+  --radius-control: 4px;
+  --radius-card: 8px;
+
+  /* ── Shadows ────────────────────────────────────────────────────────────── */
+  --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-table: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  /* ── Typography scale ───────────────────────────────────────────────────── */
+  --text-caption: 12px;
+  --text-body: 13px;
+  --text-base: 14px;
+  --text-subtitle: 16px;
+  --text-title: 20px;
+
+  /* ── Motion ─────────────────────────────────────────────────────────────── */
+  --ease-base: 0.2s ease;
+
+  /* ── Z-index scale ──────────────────────────────────────────────────────── */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-overlay: 2000;
+  --z-modal: 2100;
+}

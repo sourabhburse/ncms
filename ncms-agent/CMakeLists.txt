@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.10)
+project(NCMS)
+option(BUILD_TESTING "Build tests" OFF)
+include(CTest)
+add_subdirectory(src)

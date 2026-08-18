@@ -1,0 +1,8 @@
+config ncms_device 'device'
+    option serial_number 'SN-154'
+    option firmware_version '1.0.0'
+    option agent_version '1.0.0'
+    option hardware_model 'XE-33'
+    option base_mac 'AA:BB:CC:DD:EE:01'
+    option server_url 'http://82.180.146.203:5080/api/v1/provision/'
+    option enabled '1'

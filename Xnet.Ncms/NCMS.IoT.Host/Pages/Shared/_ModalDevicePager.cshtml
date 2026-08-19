@@ -1,0 +1,51 @@
+@*
+    Client-side device pager for the task-creation modals (Application / Firmware / Config tasks).
+    Matches the shared server-side _Pager appearance exactly — "Total N" + an outline, numbered
+    pagination — but is Alpine-driven and RIGHT-aligned, per the modal-pagination convention
+    (index pages centre it; dialogs right-align it).
+
+    Expects the enclosing Alpine scope to expose:
+      selected               – map of chosen devices (for the "Selected N" count)
+      deviceTotal            – total matching devices
+      devicePage             – current page (1-based)
+      devicePageSize         – rows per page (25 / 50 / 100)
+      devicePages()          – total page count
+      searchDevices(page)    – loads the given page
+      setDevicePageSize(size)– changes page size and reloads from page 1
+*@
+<div class="d-flex align-items-center flex-wrap gap-3 mt-3">
+    <div class="flex-fill">
+        Selected <span class="text-blue fw-bold" x-text="Object.keys(selected).length"></span> Devices
+    </div>
+    <div class="d-flex align-items-center flex-wrap gap-3 justify-content-end" x-show="deviceTotal > 0">
+        <span class="text-secondary small">Total <span class="fw-bold text-body" x-text="deviceTotal"></span></span>
+
+        @* Page-size selector — same choices as the app-wide _Pager, kept consistent. *@
+        <select class="form-select form-select-sm w-auto" aria-label="Rows per page"
+                @@change="setDevicePageSize($event.target.value)">
+            <option value="25" :selected="devicePageSize === 25">25 / page</option>
+            <option value="50" :selected="devicePageSize === 50">50 / page</option>
+            <option value="100" :selected="devicePageSize === 100">100 / page</option>
+        </select>
+
+        <ul class="pagination pagination-outline m-0">
+            <li class="page-item" :class="{ disabled: devicePage <= 1 }">
+                <button type="button" class="page-link" aria-label="Previous" @@click="searchDevices(devicePage - 1)">
+                    <icon name="chevron-left" />
+                </button>
+            </li>
+            <template x-for="p in pagerWindow(devicePage, devicePages())" :key="p">
+                <li class="page-item" :class="{ active: p === devicePage }" :aria-current="p === devicePage ? 'page' : null">
+                    @* Active page is a non-clickable span; other pages are buttons that load that page. *@
+                    <span class="page-link" x-show="p === devicePage" x-text="p"></span>
+                    <button type="button" class="page-link" x-show="p !== devicePage" x-text="p" @@click="searchDevices(p)"></button>
+                </li>
+            </template>
+            <li class="page-item" :class="{ disabled: devicePage >= devicePages() }">
+                <button type="button" class="page-link" aria-label="Next" @@click="searchDevices(devicePage + 1)">
+                    <icon name="chevron-right" />
+                </button>
+            </li>
+        </ul>
+    </div>
+</div>

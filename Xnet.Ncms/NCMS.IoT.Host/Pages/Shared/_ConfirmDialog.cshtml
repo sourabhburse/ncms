@@ -1,0 +1,32 @@
+@*
+    Standardized confirm dialog, rendered once for the whole app (included from
+    _Layout). Backed by the global Alpine.store('confirmDialog') defined in
+    site.js -- call window.confirmAction(title, message, onConfirm, opts) from
+    any click handler instead of the native confirm().
+*@
+<div x-data="{}">
+    <template x-if="$store.confirmDialog.show">
+        <div>
+            <div class="modal modal-blur fade show d-block" tabindex="-1" @@click.self="$store.confirmDialog.cancel()">
+                <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-status" :class="$store.confirmDialog.variant === 'danger' ? 'bg-danger' : 'bg-primary'"></div>
+                        <div class="modal-body text-center py-4">
+                            <h3 x-show="$store.confirmDialog.title" x-text="$store.confirmDialog.title"></h3>
+                            <div class="text-secondary" x-text="$store.confirmDialog.message"></div>
+                            <div class="fw-bold mt-1" x-show="$store.confirmDialog.itemName" x-text="$store.confirmDialog.itemName"></div>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn" @@click="$store.confirmDialog.cancel()">Cancel</button>
+                            <button type="button" class="btn"
+                                    :class="$store.confirmDialog.variant === 'danger' ? 'btn-danger' : 'btn-primary'"
+                                    @@click="$store.confirmDialog.confirm()"
+                                    x-text="$store.confirmDialog.confirmText"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        </div>
+    </template>
+</div>

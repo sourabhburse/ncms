@@ -1,0 +1,44 @@
+@{
+    var pretitle = ViewData["Pretitle"] as string;
+    var title = ViewData["Title"] as string ?? "";
+    var purpose = ViewData["Purpose"] as string;
+    var iconName = ViewData["HeaderIcon"] as string ?? "layout-dashboard";
+    var iconLabel = ViewData["HeaderIconLabel"] as string ?? title;
+}
+
+<div class="card shadow-sm border-0 mb-4 page-header-card">
+    <div class="card-body p-4 p-md-5">
+        @if (!string.IsNullOrWhiteSpace(pretitle))
+        {
+            <div class="text-uppercase text-secondary fw-semibold small mb-2 letter-spacing-wide">@pretitle</div>
+        }
+        <h1 class="card-title h2 mb-2">@title</h1>
+        @if (!string.IsNullOrWhiteSpace(purpose))
+        {
+            <p class="text-secondary mb-0 fs-5">@purpose</p>
+        }
+    </div>
+    @* <div class="row g-0 align-items-stretch">
+        <div class="col-md-3 order-md-last">
+            <div class="page-header-card__visual h-100 d-flex align-items-center justify-content-center p-4 p-md-0">
+                <div class="page-header-card__icon-wrap">
+                    <icon name="@iconName" size="56" class="page-header-card__icon" />
+                    <span class="visually-hidden">@iconLabel</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card-body p-4 p-md-5">
+                @if (!string.IsNullOrWhiteSpace(pretitle))
+                {
+                    <div class="text-uppercase text-secondary fw-semibold small mb-2 letter-spacing-wide">@pretitle</div>
+                }
+                <h1 class="card-title h2 mb-2">@title</h1>
+                @if (!string.IsNullOrWhiteSpace(purpose))
+                {
+                    <p class="text-secondary mb-0 fs-6">@purpose</p>
+                }
+            </div>
+        </div>
+    </div> *@
+</div>

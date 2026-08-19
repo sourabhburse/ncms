@@ -1,0 +1,15 @@
+<Solution>
+  <Project Path="NCMS.Architecture.Tests/NCMS.Architecture.Tests.csproj" />
+  <Project Path="NCMS.IoT.Api/NCMS.IoT.Api.csproj" />
+  <Project Path="NCMS.IoT.Core/NCMS.IoT.Core.csproj" />
+  <Project Path="NCMS.IoT.DbMigrator/NCMS.IoT.DbMigrator.csproj" />
+  <Project Path="NCMS.IoT.DeviceManagement.Contracts/NCMS.IoT.DeviceManagement.Contracts.csproj" />
+  <Project Path="NCMS.IoT.DeviceManagement/NCMS.IoT.DeviceManagement.csproj" />
+  <Project Path="NCMS.IoT.Identity.Contracts/NCMS.IoT.Identity.Contracts.csproj" />
+  <Project Path="NCMS.IoT.Identity/NCMS.IoT.Identity.csproj" />
+  <Project Path="NCMS.IoT.Host/NCMS.IoT.Host.csproj" Id="773f817d-250d-4c6c-9d23-2b1ceb8edd64" />
+  <Project Path="NCMS.IoT.Infrastructure.Pki/NCMS.IoT.Infrastructure.Pki.csproj" />
+  <Project Path="NCMS.IoT.MqttClient/NCMS.IoT.MqttClient.csproj" />
+  <Project Path="NCMS.Persistence/NCMS.Persistence.csproj" />
+  <Project Path="NCMS.Shared/NCMS.Shared.csproj" />
+</Solution>

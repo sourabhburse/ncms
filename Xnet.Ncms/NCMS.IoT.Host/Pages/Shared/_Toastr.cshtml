@@ -1,0 +1,17 @@
+@{
+    var success = TempData["toast.success"] as string;
+    var error = TempData["toast.error"] as string;
+    var info = TempData["toast.info"] as string;
+}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // All toasts (success/error/info/warning) share the same top-centered, content-width
+        // presentation for consistency — see #toast-container.toast-center in site.css. Set
+        // unconditionally (not just when a TempData toast is queued) so ad-hoc toastr.*() calls
+        // from page-level JS (e.g. AJAX abort/action feedback) pick up the same styling.
+        toastr.options = { positionClass: 'toast-center', timeOut: 5000, progressBar: true };
+    @if (success is not null) { @Html.Raw($"toastr.success({System.Text.Json.JsonSerializer.Serialize(success)});") }
+    @if (error is not null)   { @Html.Raw($"toastr.error({System.Text.Json.JsonSerializer.Serialize(error)}, '', {{ timeOut: 8000 }});") }
+    @if (info is not null)    { @Html.Raw($"toastr.info({System.Text.Json.JsonSerializer.Serialize(info)});") }
+    });
+</script>

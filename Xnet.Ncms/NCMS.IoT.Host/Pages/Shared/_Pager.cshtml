@@ -1,0 +1,72 @@
+@model NCMS.IoT.Host.Models.PagerInfo
+@*
+    Shared pager, styled to match the Device Details → History & Analysis control:
+    "Total N   ‹  1  ›   [ N / page ]". Centered on index pages, right-aligned ("end") in
+    dialog / modal windows. The page-size selector is integrated here (no separate control).
+*@
+@{
+    var cur = Model.Page < 1 ? 1 : Model.Page;
+    var totalPages = Math.Max(1, Model.TotalPages);
+    var startPage = Math.Max(1, cur - 2);
+    var endPage = Math.Min(totalPages, startPage + 4);
+    startPage = Math.Max(1, endPage - 4);
+
+    var justify = Model.Align == "end" ? "justify-content-end" : "justify-content-center";
+    var wrapper = Model.Framed ? "card-footer" : "mt-3";
+}
+<div class="@wrapper">
+    <div class="d-flex align-items-center flex-wrap gap-3 @justify">
+        <span class="text-secondary small">Total @Model.Total</span>
+
+        @if (Model.PageSizeOptions.Count > 0)
+        {
+            @* data-page-size lets the tableController intercept changes for partial updates.
+               The inline handler is the no-controller fallback: it only navigates when the
+               select is NOT inside a tableController (which owns the change otherwise). *@
+            <select class="form-select form-select-sm w-auto" aria-label="Rows per page"
+                    data-page-size
+                    onchange="if (this.value &amp;&amp; !this.closest('[data-table-controller]')) window.location.href = this.value;">
+                @foreach (var size in Model.PageSizeOptions)
+                {
+                    var rvd = new Microsoft.AspNetCore.Routing.RouteValueDictionary();
+                    foreach (var kv in Model.RouteForPageSize(size)) { rvd[kv.Key] = kv.Value; }
+                    var url = Url.Page(Model.PageName, rvd);
+                    <option value="@url" selected="@(Model.PageSize == size)">@size / page</option>
+                }
+            </select>
+        }
+
+        <ul class="pagination pagination-outline m-0">
+            <li class="page-item @(cur <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-page="@Model.PageName"
+                   asp-all-route-data="Model.RouteFor(Math.Max(1, cur - 1))"
+                   tabindex="-1" aria-label="Previous">
+                    <icon name="chevron-left" />
+                </a>
+            </li>
+            @for (var p = startPage; p <= endPage; p++)
+            {
+                if (p == cur)
+                {
+                    @* Active page renders as a non-link span so re-clicking it never re-requests the same page. *@
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">@p</span>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-page="@Model.PageName" asp-all-route-data="Model.RouteFor(p)">@p</a>
+                    </li>
+                }
+            }
+            <li class="page-item @(cur >= totalPages ? "disabled" : "")">
+                <a class="page-link" asp-page="@Model.PageName"
+                   asp-all-route-data="Model.RouteFor(Math.Min(totalPages, cur + 1))"
+                   aria-label="Next">
+                    <icon name="chevron-right" />
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>

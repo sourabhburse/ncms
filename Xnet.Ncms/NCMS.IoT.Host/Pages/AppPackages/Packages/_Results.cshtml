@@ -1,0 +1,154 @@
+@model NCMS.IoT.Host.Pages.AppPackages.Packages.IndexModel
+@using NCMS.IoT.DeviceManagement.Contracts.Permissions
+@*
+    Results region for the merged Application Packages page — a flat list of every version across
+    all packages (mirrors Firmware Packages). Swapped in by tableController; row action buttons
+    (@click) bind to the page's `pkgIndex` component, which Alpine re-initialises after each swap.
+*@
+@{
+    SortHeaderVm Sortable(string key, string label) => new()
+    {
+        Key = key,
+        Label = label,
+        CurrentSort = Model.Sort,
+        PageName = "/AppPackages/Packages/Index",
+        RouteValues = Model.FilterRouteValues()
+    };
+}
+<div class="card">
+    <div class="card-body">
+        <div class="btn-list">
+            <button type="button" class="btn btn-primary" asp-permission="@DeviceManagementPermissions.ApplicationPackages.Add" @@click="openCreate()">
+                <i class="ti ti-plus me-1"></i>Add Package
+            </button>
+        </div>
+    </div>
+    <div id="advanced-table">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table table-hover">
+                <thead>
+                    <tr>
+                        <th class="w-1">#</th>
+                        <th><partial name="_SortHeader" model='Sortable("name", "Name")' /></th>
+                        <th>Tags</th>
+                        <th><partial name="_SortHeader" model='Sortable("version", "Version")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("format", "Format")' /></th>
+                        <th>Product Model</th>
+                        <th><partial name="_SortHeader" model='Sortable("status", "Status")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("size", "Size")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("uploaded", "Uploaded")' /></th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="table-tbody">
+                    @{ var idx = (Model.Result.PageNumber - 1) * Model.Result.PageSize; }
+                    @foreach (var v in Model.Versions)
+                    {
+                        idx++;
+                        var missing = new List<string>();
+                        if (!v.HasArtifact) missing.Add("upload an artifact");
+                        if (v.CompatibleProductCount == 0) missing.Add("configure at least one compatible product");
+                        var canEnable = missing.Count == 0;
+                        <tr>
+                            <td class="text-secondary">@idx</td>
+                            <td>
+                                <a href="#" class="text-reset fw-medium" @@click.prevent="openEdit('@v.Id')">@v.PackageName</a>
+                            </td>
+                            <td>
+                                @if (v.Tags.Count == 0)
+                                {
+                                    <span class="text-secondary">—</span>
+                                }
+                                else
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var tag in v.Tags)
+                                        {
+                                            <span class="badge badge-outline text-cyan">@tag</span>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                            <td><span class="font-monospace">@v.Version</span></td>
+                            <td><span class="badge bg-azure-lt">@v.PackageFormat</span></td>
+                            <td>
+                                @if (v.CompatibleProductNames.Count == 0)
+                                {
+                                    <span class="text-secondary">—</span>
+                                }
+                                else
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var pm in v.CompatibleProductNames)
+                                        {
+                                            <span class="text-secondary">@pm</span>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @Ui.EnabledBadge(v.IsEnabled)">
+                                    @(v.IsEnabled ? "Enabled" : "Disabled")
+                                </span>
+                                @if (!v.IsEnabled && !canEnable)
+                                {
+                                    <div class="text-secondary small mt-1">Needs: @string.Join("; ", missing)</div>
+                                }
+                            </td>
+                            <td>@(v.SizeBytes > 0 ? $"{v.SizeBytes / 1024.0 / 1024.0:F2} MB" : "—")</td>
+                            <td class="text-nowrap">@v.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-center text-nowrap">
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <button type="button" class="btn btn-link btn-sm p-1 text-secondary"
+                                            asp-permission="@DeviceManagementPermissions.ApplicationPackages.Edit"
+                                            @@click="openEdit('@v.Id')">Edit</button>
+                                    @if (v.IsEnabled)
+                                    {
+                                        <form method="post" asp-page-handler="Toggle" class="d-inline" asp-permission="@DeviceManagementPermissions.ApplicationPackages.EnableDisable">
+                                            <input type="hidden" name="id" value="@v.Id" />
+                                            <input type="hidden" name="enable" value="false" />
+                                            <button type="submit" class="btn btn-link btn-sm p-1 text-warning">Disable</button>
+                                        </form>
+                                    }
+                                    else if (canEnable)
+                                    {
+                                        <form method="post" asp-page-handler="Toggle" class="d-inline" asp-permission="@DeviceManagementPermissions.ApplicationPackages.EnableDisable">
+                                            <input type="hidden" name="id" value="@v.Id" />
+                                            <input type="hidden" name="enable" value="true" />
+                                            <button type="submit" class="btn btn-link btn-sm p-1 text-success">Enable</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-link btn-sm p-1 text-secondary" disabled
+                                                asp-permission="@DeviceManagementPermissions.ApplicationPackages.EnableDisable"
+                                                title="@("Cannot enable yet — " + string.Join("; ", missing) + ".")">
+                                            Enable
+                                        </button>
+                                    }
+                                    <form method="post" asp-page-handler="Delete" class="d-inline" asp-permission="@DeviceManagementPermissions.ApplicationPackages.Delete">
+                                        <input type="hidden" name="id" value="@v.Id" />
+                                        <button type="button" class="btn btn-link btn-sm p-1 text-danger" disabled="@v.IsEnabled"
+                                                title="@(v.IsEnabled ? "Disable this version to delete it" : null)"
+                                                data-item-name="@v.PackageName @v.Version"
+                                                @@click="confirmAction('', 'Do you want to delete the Application Package?', () => $el.closest('form').requestSubmit(), { itemName: $el.dataset.itemName })">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Versions.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center text-secondary py-4">
+                                No application package versions yet. Click <strong>Add Package</strong> to create the first one.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @{ var pager = PagerInfo.From(Model.Result, "/AppPackages/Packages/Index", Model.FilterRouteValues(), "center", Model.PageSizeOptions); }
+    <partial name="_Pager" model="pager" />
+</div>

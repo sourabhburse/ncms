@@ -1,0 +1,66 @@
+@model NCMS.IoT.Host.Models.ProductFilterVm
+@*
+    Cascading product-hierarchy filter dropdowns: Product Series (ProductCategory) →
+    Product Type (ProductType) → Product Model (Product). The full hierarchy is emitted once
+    as JSON; dependent dropdowns narrow client-side (Alpine) with no round-trip. Selecting a
+    value is submitted as a query parameter by the enclosing GET filter form.
+*@
+@{
+    var pfId = "pf-" + Guid.NewGuid().ToString("N");
+    var hierarchyJson = System.Text.Json.JsonSerializer.Serialize(
+        new { categories = Model.Options.Categories, types = Model.Options.Types, models = Model.Options.Models },
+        new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+        });
+}
+<script id="@pfId-data" type="application/json">@Html.Raw(hierarchyJson)</script>
+<div class="d-flex flex-wrap gap-2"
+     x-data="productFilters('@pfId-data', '@Model.CategoryId', '@Model.TypeId', '@Model.ProductId')">
+    <select name="categoryId" class="form-select form-select-sm" style="min-width:140px;flex:1 1 140px;" x-model="categoryId" x-on:change="onCategoryChange()">
+        <option value="">All Series</option>
+        <template x-for="c in categories" :key="c.id">
+            <option :value="c.id" x-text="c.name"></option>
+        </template>
+    </select>
+    <select name="typeId" class="form-select form-select-sm" style="min-width:140px;flex:1 1 140px;" x-model="typeId" x-on:change="onTypeChange()">
+        <option value="">All Types</option>
+        <template x-for="t in filteredTypes" :key="t.id">
+            <option :value="t.id" x-text="t.name"></option>
+        </template>
+    </select>
+    <select name="productId" class="form-select form-select-sm" style="min-width:140px;flex:1 1 140px;" x-model="productId">
+        <option value="">All Models</option>
+        <template x-for="m in filteredModels" :key="m.id">
+            <option :value="m.id" x-text="m.name"></option>
+        </template>
+    </select>
+</div>
+<script>
+    // Reusable factory for the cascading product-hierarchy dropdowns. Defined once; safe to
+    // re-run if the partial is included on multiple pages (idempotent assignment).
+    window.productFilters = function (dataElId, categoryId, typeId, productId) {
+        var data = JSON.parse(document.getElementById(dataElId).textContent || '{}');
+        return {
+            categories: data.categories || [],
+            types: data.types || [],
+            models: data.models || [],
+            categoryId: categoryId || '',
+            typeId: typeId || '',
+            productId: productId || '',
+            get filteredTypes() {
+                return this.categoryId ? this.types.filter(t => t.categoryId === this.categoryId) : this.types;
+            },
+            get filteredModels() {
+                if (this.typeId) return this.models.filter(m => m.typeId === this.typeId);
+                if (this.categoryId) {
+                    var tids = this.filteredTypes.map(t => t.id);
+                    return this.models.filter(m => tids.includes(m.typeId));
+                }
+                return this.models;
+            },
+            onCategoryChange() { this.typeId = ''; this.productId = ''; },
+            onTypeChange() { this.productId = ''; }
+        };
+    };
+</script>

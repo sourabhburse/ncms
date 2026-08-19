@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_Head"/>
+</head>
+@* Prototype layout: Tabler's horizontal nav instead of the vertical sidebar.
+   Deliberately a separate file from _Layout.cshtml (opted into per-page via
+   `Layout = "_LayoutHorizontal";`) so this can be evaluated on one page without
+   touching the shell every other page still uses. *@
+<body>
+    <div class="page">
+        <partial name="_HeaderHorizontal"/>
+        @{
+            bool showHeaderCard = ViewData["ShowPageHeaderCard"] is not bool show || show;
+            bool hasPageActions = IsSectionDefined("PageActions");
+        }
+        <div class="page-wrapper">
+            @if (showHeaderCard || hasPageActions)
+            {
+                <div class="page-header d-print-none">
+                    <div class="container-xl">
+
+                        @if (showHeaderCard)
+                        {
+                            <div class="row g-2 align-items-center">
+                                <div class="col">
+                                    <partial name="_PageHeaderCard" />
+                                </div>
+                            </div>
+                        }
+
+                        @if (hasPageActions)
+                        {
+                            <div class="row g-2 align-items-center @(showHeaderCard ? "mt-2" : "")">
+                                <div class="col-auto ms-auto d-print-none">
+                                    <div class="btn-list">
+                                        @await RenderSectionAsync("PageActions", required: false)
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            }
+
+            <div class="page-body">
+                <div class="container-xl">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ScriptsBasePlugins"/>
+    <partial name="_Toastr"/>
+    <partial name="_ConfirmDialog"/>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

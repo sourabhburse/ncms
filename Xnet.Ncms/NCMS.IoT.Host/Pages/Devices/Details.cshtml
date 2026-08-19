@@ -1,0 +1,311 @@
+@page "{id:guid}"
+@model NCMS.IoT.Host.Pages.Devices.DetailsModel
+@{
+    ViewData["Title"] = "Device Details";
+    ViewData["Pretitle"] = "Fleet";
+    ViewData["ShowPageHeaderCard"] = false;
+    var d = Model.Device;
+    var onHistory = Model.Tab == "history";
+}
+
+<div class="mb-3">
+    <a asp-page="/Devices/Index" class="text-decoration-none d-inline-flex align-items-center gap-1">
+        <icon name="arrow-left" /> Back
+    </a>
+</div>
+
+@if (d is null)
+{
+    <div class="card"><div class="card-body text-center text-secondary py-5">Device not found.</div></div>
+}
+else
+{
+    <style>
+        .detail-tabs { display:flex; gap:.5rem; overflow-x:auto; border-bottom:1px solid var(--tblr-border-color); }
+        .detail-tab {
+            display:inline-flex; align-items:center; gap:.5rem; white-space:nowrap;
+            height:min-content; padding:.5rem 1rem; font-size:.875rem; font-weight:500;
+            color:var(--tblr-secondary); background:transparent; border:0;
+            border-bottom:2px solid transparent; margin-bottom:-1px; cursor:pointer;
+        }
+        .detail-tab:hover { color:var(--tblr-body-color); border-bottom-color:var(--tblr-border-color-dark, #adb5bd); }
+        .detail-tab.active { font-weight:700; color:var(--tblr-primary); border-bottom-color:var(--tblr-primary); }
+        .detail-tab:focus-visible { outline:2px solid var(--tblr-primary); outline-offset:2px; }
+    </style>
+
+    <div class="card"
+         x-data="{
+            selectedTab: '@(onHistory ? "history" : "overview")',
+            moveTab(e, dir) {
+                const tabs = [...e.currentTarget.querySelectorAll('[role=tab]')];
+                let i = tabs.indexOf(document.activeElement);
+                if (i === -1) return;
+                tabs[(i + dir + tabs.length) % tabs.length].focus();
+            }
+         }">
+        <div class="card-body">
+            <!-- Tab strip -->
+            <div class="detail-tabs mb-3" role="tablist" aria-label="Device detail views"
+                 @@keydown.left.prevent="moveTab($event, -1)" @@keydown.right.prevent="moveTab($event, 1)">
+                <button type="button" class="detail-tab" :class="{ active: selectedTab==='overview' }"
+                        role="tab" id="tab-overview" aria-controls="panel-overview"
+                        :aria-selected="selectedTab==='overview'" :tabindex="selectedTab==='overview' ? 0 : -1"
+                        @@click="selectedTab='overview'">Overview</button>
+                <button type="button" class="detail-tab" :class="{ active: selectedTab==='history' }"
+                        role="tab" id="tab-history" aria-controls="panel-history"
+                        :aria-selected="selectedTab==='history'" :tabindex="selectedTab==='history' ? 0 : -1"
+                        @@click="selectedTab='history'">History &amp; Analysis</button>
+            </div>
+
+            <!-- Overview -->
+            <div x-show="selectedTab==='overview'" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+                @if (!d.IsOnline)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        The current device is offline.
+                    </div>
+                }
+
+                <h3 class="border-start border-3 border-primary ps-2 mb-4">Device Details</h3>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card border-0 p-5">
+                            <div class="row g-3 mb-3">
+                                @{
+                                    var tiles = new (string Icon, string Value, string Label, bool Mono, bool Badge)[]
+                                    {
+                                        ("box",            string.IsNullOrEmpty(d.Name) ? (d.SerialNumber ?? "—") : d.Name, "Device Name",       false, false),
+                                        ("file",           d.SerialNumber ?? "—",    "Device Code",       true,  false),
+                                        ("plug-connected", d.IsOnline ? "Online" : "Offline", "Status",      false, true),
+                                        ("cpu",            Format.OrDash(d.FirmwareVersion), "Firmware",  false, false),
+                                        ("settings",       Format.OrDash(d.AgentVersion),   "Agent",      false, false),
+                                        ("device-desktop", Format.OrDash(d.HardwareModel),  "Model",      false, false),
+                                    };
+                                }
+                                @foreach (var t in tiles)
+                                {
+                                    <div class="col-sm-6 col-md-4">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="d-flex align-items-center justify-content-center rounded bg-primary-lt flex-shrink-0"
+                                                  style="width:44px;height:44px">
+                                                <icon name="@t.Icon" class="text-primary" size="22" />
+                                            </span>
+                                            <div class="min-w-0">
+                                                @if (t.Badge)
+                                                {
+                                                    <div>
+                                                        <span class="badge bg-@(d.IsOnline ? "green" : "red")-lt">@t.Value</span>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="fw-bold text-truncate @(t.Mono ? "font-monospace" : "")">@t.Value</div>
+                                                }
+                                                <div class="text-secondary small">@t.Label</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="row">
+                                @{
+                                    var rows = new (string Label, string Value, bool Mono)[]
+                                    {
+                                        ("WAN IP",     Format.OrDash(d.WanIpAddress),                   true),
+                                        ("MAC",        Format.Macs(d.MacAddresses),                     false),
+                                        ("Last Seen",  Format.DateTime(d.LastSeenAt),                   false),
+                                        ("Location",   Format.Coordinates(d.Latitude, d.Longitude),     false),
+                                        ("Activated",  Format.DateTime(d.ActivatedAt),                  false),
+                                        ("Created At", Format.DateTime(d.CreatedAt),                    false),
+                                        ("Updated At", Format.DateTime(d.UpdatedAt),                    false),
+                                    };
+                                }
+                                @foreach (var r in rows)
+                                {
+                                    <div class="col-sm-6 mb-2 d-flex gap-2">
+                                        <span class="fw-semibold" style="min-width:110px">@r.Label</span>
+                                        <span class="text-secondary @(r.Mono ? "font-monospace" : "")">@r.Value</span>
+                                    </div>
+                                }
+                                <div class="col-12 mb-2 d-flex gap-2">
+                                    <span class="fw-semibold" style="min-width:110px">Remarks</span>
+                                    <span class="text-secondary">@Format.OrDash(d.Notes)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="d-flex align-items-center justify-content-center text-secondary rounded h-100"
+                             style="min-height:240px;background:linear-gradient(135deg,#fafcff,#f3f7fd)">
+                            No device picture available
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="border-start border-3 border-primary ps-2 mb-3 mt-4">Certificates</h3>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr><th>Subject</th><th>Issued</th><th>Expires</th><th>Active</th></tr>
+                        </thead>
+                        <tbody>
+                            @if (d.Certificates.Count == 0)
+                            {
+                                <tr><td colspan="4" class="text-secondary text-center">No certificates.</td></tr>
+                            }
+                            @foreach (var c in d.Certificates)
+                            {
+                                <tr>
+                                    <td class="text-truncate" style="max-width:20rem">@c.SubjectName</td>
+                                    <td>@c.IssuedAt.ToLocalTime().ToString("g")</td>
+                                    <td>@c.ExpiresAt.ToLocalTime().ToString("g")</td>
+                                    <td>
+                                        @if (c.IsActive)
+                                        {
+                                            <span class="badge bg-green-lt">active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-lt">revoked</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- History & Analysis -->
+            <div x-show="selectedTab==='history'" id="panel-history" role="tabpanel" aria-labelledby="tab-history" x-cloak>
+                <div x-data="tableController" data-table-controller data-results-id="history-results">
+                    <form method="get" @@submit.prevent="onSubmit($event)">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="tab" value="history" />
+                        <div class="card card-sm mb-3">
+                            <div class="card-body">
+                                <div class="d-grid" style="grid-template-columns:minmax(0,1fr) auto;column-gap:1rem;align-items:end;">
+                                    <div class="d-flex flex-wrap gap-2 align-items-end">                                  
+                                        <div class="position-relative" style="min-width:260px;flex:0 1 260px;"
+                                             x-data="{
+                                                 open: false,
+                                                 start: '@Model.StartDate?.ToString("yyyy-MM-dd")',
+                                                 end: '@Model.EndDate?.ToString("yyyy-MM-dd")'
+                                             }">
+                                            <label class="form-label small text-secondary mb-1">&nbsp;</label>
+                                            <input type="text" readonly class="form-control form-control-sm" style="cursor:pointer;background:#fff;"
+                                                   @@click="open = !open"
+                                                   :value="(start || 'Start Time') + ' – ' + (end || 'End Time')" />
+                                            <div x-show="open" @@click.outside="open = false" x-cloak
+                                                 class="card shadow-sm p-2 position-absolute" style="z-index:20;top:100%;left:0;min-width:280px;">
+                                                <div class="d-flex gap-2">
+                                                    <div>
+                                                        <label class="form-label small text-secondary mb-1">Start Time</label>
+                                                        <input type="date" name="startDate" class="form-control form-control-sm"
+                                                               x-model="start" :max="end || null" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="form-label small text-secondary mb-1">End Time</label>
+                                                        <input type="date" name="endDate" class="form-control form-control-sm"
+                                                               x-model="end" :min="start || null" />
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-end gap-2 mt-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                            @@click="start = ''; end = ''">Clear</button>
+                                                    <button type="button" class="btn btn-sm btn-primary"
+                                                            @@click="open = false">Apply</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="align-self-start">
+                                        <label class="form-label small text-secondary mb-1" aria-hidden="true" style="visibility:hidden;">&nbsp;</label>
+                                        <div class="d-flex gap-2 flex-nowrap">
+                                            <button type="submit" class="btn btn-sm btn-primary text-nowrap">Search</button>
+                                            <a asp-page="/Devices/Details" asp-route-id="@Model.Id"
+                                               asp-route-tab="history" class="btn btn-sm btn-outline-secondary text-nowrap">Reset</a>
+                                            @* Plain link, not a tableController submit: the browser must perform a real
+                                               navigation for the file download, not a partial-table fetch. *@
+                                            <a asp-page="/Devices/Details" asp-page-handler="Export"
+                                               asp-route-id="@Model.Id"
+                                               asp-route-serial="@Model.Serial"
+                                               asp-route-startDate="@Model.StartDate?.ToString("yyyy-MM-dd")"
+                                               asp-route-endDate="@Model.EndDate?.ToString("yyyy-MM-dd")"
+                                               class="btn btn-sm btn-outline-secondary text-nowrap">
+                                                <icon name="download" /> Export
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="history-results" @@click="onClick($event)" @@change="onChange($event)"
+                         :class="{ 'opacity-50 pe-none': tableLoading }" style="transition:opacity .15s">
+                        <partial name="_HistoryResults" model="Model" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    // Backs the History & Analysis tab (_HistoryResults.cshtml): reads the raw telemetry
+    // records embedded as a JSON island, parses each record's PayloadJson, and discovers
+    // table columns dynamically since telemetry payloads have no fixed schema.
+    function telemetryTable(elementId, startIndex) {
+        return {
+            startIndex: startIndex || 0,
+            rows: [],
+            columns: [],
+
+            init() {
+                const el = document.getElementById(elementId);
+                let raw = [];
+                try { raw = JSON.parse(el?.textContent || '[]'); } catch { raw = []; }
+
+                this.rows = raw.map(r => {
+                    let data = {};
+                    if (r.payload) {
+                        try { data = JSON.parse(r.payload); } catch { data = {}; }
+                    }
+                    return { ts: r.ts, data };
+                });
+
+                const seen = new Set();
+                const cols = [];
+                for (const r of this.rows) {
+                    for (const key of Object.keys(r.data)) {
+                        if (!seen.has(key)) { seen.add(key); cols.push(key); }
+                    }
+                }
+                this.columns = cols;
+            },
+
+            label(c) {
+                return c.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+            },
+
+            fmt(value) {
+                if (value === undefined || value === null || value === '') return '—';
+                if (typeof value === 'number') return Number.isInteger(value) ? String(value) : value.toFixed(2);
+                if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+                return String(value);
+            },
+
+            fmtTs(ts) {
+                if (!ts) return '—';
+                const d = new Date(ts);
+                if (isNaN(d.getTime())) return String(ts);
+                const pad = n => String(n).padStart(2, '0');
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            }
+        };
+    }
+</script>
+}

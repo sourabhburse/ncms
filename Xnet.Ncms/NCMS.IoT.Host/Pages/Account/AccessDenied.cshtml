@@ -1,0 +1,38 @@
+@page
+@model NCMS.IoT.Host.Pages.Account.AccessDeniedModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Access denied";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_Head" />
+</head>
+<body class="border-top-wide border-danger d-flex flex-column">
+<div class="page page-center">
+    <div class="container container-tight py-4 text-center">
+        <div class="mb-4">
+            <img src="@NCMS.IoT.Host.Models.Settings.Logo" alt="@NCMS.IoT.Host.Models.Settings.App" height="42">
+        </div>
+        <div class="empty">
+            <div class="empty-icon">
+                <icon name="lock" style="width:3rem;height:3rem;" />
+            </div>
+            <p class="empty-title">Access denied</p>
+            <p class="empty-subtitle text-secondary">
+                You don't have permission to view this page. If you believe this is a mistake,
+                contact an administrator.
+            </p>
+            <div class="empty-action">
+                <a asp-page="/Index" class="btn btn-primary">Go to dashboard</a>
+                <form method="post" asp-page="/Account/Logout" class="d-inline">
+                    <button type="submit" class="btn btn-link">Sign out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_ScriptsBasePlugins" />
+</body>
+</html>

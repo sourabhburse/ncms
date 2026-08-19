@@ -1,0 +1,119 @@
+@model NCMS.IoT.Host.Pages.Inventory.IndexModel
+@using System.Text.Json
+@using NCMS.IoT.DeviceManagement.Contracts.Permissions
+@*
+    Results region for Hardware Inventory — swapped in by tableController. The batch toolbar
+    and row checkboxes are bound to the page's own `hwInventory` component (an ancestor of
+    #results); Alpine re-initialises them after each swap.
+*@
+@{
+    string ClaimsJson(IReadOnlyDictionary<string, string?> claims) =>
+        JsonSerializer.Serialize(claims.Select(c => new { key = c.Key, value = c.Value ?? "" }));
+
+    string FormatClaims(IReadOnlyDictionary<string, string?> claims) =>
+        claims.Count == 0 ? "—" : string.Join("  ·  ", claims.Select(c => $"{c.Key}: {c.Value}"));
+
+    SortHeaderVm Sortable(string key, string label) => new()
+    {
+        Key = key,
+        Label = label,
+        CurrentSort = Model.Sort,
+        PageName = "/Inventory/Index",
+        RouteValues = Model.FilterRouteValues()
+    };
+}
+<div class="card">
+    <div class="card-body">
+        <div class="btn-list">
+            <button type="button" class="btn btn-primary"
+                    asp-permission="@DeviceManagementPermissions.Inventory.Add,@DeviceManagementPermissions.Inventory.Upload"
+                    data-bs-toggle="modal" data-bs-target="#modal-add" @@click="resetAdd()">
+                <i class="ti ti-plus me-1"></i>Add
+            </button>
+            <button type="button" class="btn btn-danger"
+                    asp-permission="@DeviceManagementPermissions.Inventory.Delete"
+                    :disabled="selectedIds.length === 0"
+                    data-bs-toggle="modal" data-bs-target="#modal-batch-delete"
+                    @@click="openBatchDelete()">
+                <i class="ti ti-trash me-1"></i>
+                Batch Delete <span x-show="selectedIds.length" x-text="'(' + selectedIds.length + ')'"></span>
+            </button>
+        </div>
+    </div>
+    <div id="advanced-table">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table table-hover table-selectable">
+                <thead>
+                    <tr>
+                        <th class="w-1">
+                            <input type="checkbox" class="form-check-input m-0"
+                                   @@change="toggleAll($event)" :checked="allSelected" />
+                        </th>
+                        <th class="w-1">#</th>
+                        <th><partial name="_SortHeader" model='Sortable("serial", "Serial Number")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("product", "Product")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("status", "Status")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("policy", "Identity Policy")' /></th>
+                        <th>Identity Claims</th>
+                        <th><partial name="_SortHeader" model='Sortable("registered", "Registered")' /></th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="table-tbody">
+                    @{ var idx = (Model.Result.PageNumber - 1) * Model.Result.PageSize; }
+                    @foreach (var item in Model.Items)
+                    {
+                        idx++;
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="form-check-input m-0"
+                                       value="@item.Id" x-model="selectedIds" />
+                            </td>
+                            <td class="text-secondary">@idx</td>
+                            <td><span class="font-monospace">@item.SerialNumber</span></td>
+                            <td>@item.ProductName</td>
+                            <td>
+                                <span class="badge bg-@(StatusColors.HardwareTag(item.Status))-lt">
+                                    @item.Status
+                                </span>
+                            </td>
+                            <td><span class="badge bg-secondary-lt">@item.IdentityPolicy</span></td>
+                            <td class="text-secondary small">@FormatClaims(item.IdentityClaims)</td>
+                            <td class="text-nowrap">@item.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-center text-nowrap">
+                                <button type="button" class="btn btn-link btn-sm p-1 text-primary"
+                                        asp-permission="@DeviceManagementPermissions.Inventory.Edit"
+                                        data-id="@item.Id"
+                                        data-serial="@item.SerialNumber"
+                                        data-product-id="@item.ProductId"
+                                        data-policy="@item.IdentityPolicy"
+                                        data-claims="@ClaimsJson(item.IdentityClaims)"
+                                        data-bs-toggle="modal" data-bs-target="#modal-edit"
+                                        @@click="openEdit($event.currentTarget)">
+                                    Edit
+                                </button>
+                                <button type="button" class="btn btn-link btn-sm p-1 text-danger"
+                                        asp-permission="@DeviceManagementPermissions.Inventory.Delete"
+                                        data-id="@item.Id"
+                                        data-serial="@item.SerialNumber"
+                                        @@click="openDelete($event.currentTarget)">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-secondary py-4">
+                                No hardware entries match the current filters.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @{ var pager = PagerInfo.From(Model.Result, "/Inventory/Index", Model.FilterRouteValues(), "center", Model.PageSizeOptions); }
+    <partial name="_Pager" model="pager" />
+</div>

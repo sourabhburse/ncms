@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>NCMS.IoT.Api</RootNamespace>
+    <UserSecretsId>ncms-iot-api-secrets</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- No EF Core tooling package here — migrations are authored against
+         NCMS.IoT.DeviceManagement directly (it has its own IDesignTimeDbContextFactory) and
+         applied via NCMS.IoT.DbMigrator or this app's own startup InitializeModulesAsync(). -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <!-- Pins the transitive Microsoft.OpenApi dependency past the vulnerable 2.0.0 — see the
+         comment in Directory.Packages.props. -->
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Mediator.SourceGenerator">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NCMS.IoT.Core\NCMS.IoT.Core.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Infrastructure.Pki\NCMS.IoT.Infrastructure.Pki.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.DeviceManagement\NCMS.IoT.DeviceManagement.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.DeviceManagement.Contracts\NCMS.IoT.DeviceManagement.Contracts.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Identity\NCMS.IoT.Identity.csproj" />
+  </ItemGroup>
+
+</Project>

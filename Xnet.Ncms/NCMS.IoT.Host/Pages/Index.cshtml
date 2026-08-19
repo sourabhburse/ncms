@@ -1,0 +1,313 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Pretitle"] = "Overview";
+    // ViewData["Purpose"] = "Review fleet health, telemetry activity, and system-wide operational summaries from one place.";
+    // ViewData["HeaderIcon"] = "layout-dashboard";
+    ViewData["ShowPageHeaderCard"] = false;
+}
+
+<div class="row row-deck row-cards">
+
+    @* ── Device fleet status ──
+         Offline and Inactive are deliberately distinct, mutually-exclusive metrics (see
+         GetDashboardSummary): Offline devices are expected to be reachable but currently
+         aren't (a live problem); Inactive devices simply aren't expected to communicate
+         (disabled, decommissioned, under maintenance, or never activated). ── *@
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-primary-lt text-primary avatar"><icon name="devices" /></span></div>
+                    <div class="col">
+                        <div class="text-secondary text-uppercase fs-6 fw-medium">All Devices</div>
+                        <div class="h1 mb-0 fw-bold">@Model.Summary.TotalDevices</div>
+                        <div class="text-secondary small">Total registered fleet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-success-lt text-success avatar"><icon name="wifi" /></span></div>
+                    <div class="col">
+                        <div class="text-secondary text-uppercase fs-6 fw-medium">Online Devices</div>
+                        <div class="h1 mb-0 fw-bold">@Model.Summary.OnlineDevices</div>
+                        <div class="text-secondary small">Connected right now</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-sm" title="Expected to be online but currently unreachable — network, power, or communication failure.">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-danger-lt text-danger avatar"><icon name="plug-connected-x" /></span></div>
+                    <div class="col">
+                        <div class="text-secondary text-uppercase fs-6 fw-medium">Offline Devices</div>
+                        <div class="h1 mb-0 fw-bold">@Model.Summary.OfflineDevices</div>
+                        <div class="text-secondary small">Unreachable, expected online</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-sm" title="Not expected to communicate — disabled, decommissioned, under maintenance, or not yet activated.">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-secondary-lt text-secondary avatar"><icon name="moon" /></span></div>
+                    <div class="col">
+                        <div class="text-secondary text-uppercase fs-6 fw-medium">Inactive Devices</div>
+                        <div class="h1 mb-0 fw-bold">@Model.Summary.InactiveDevices</div>
+                        <div class="text-secondary small">Not expected to communicate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Secondary fleet metrics ── *@
+    @* <div class="col-sm-6 col-lg-4">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-azure-lt text-azure avatar"><icon name="cpu" /></span></div>
+                    <div class="col">
+                        <div class="font-weight-medium">@Model.Summary.UnprovisionedHardware unprovisioned</div>
+                        <div class="text-secondary">@Model.Summary.TotalHardware hardware units</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-green-lt text-green avatar"><icon name="box" /></span></div>
+                    <div class="col">
+                        <div class="font-weight-medium">@Model.Summary.PublishedPackages total</div>
+                        <div class="text-secondary">Firmware packages</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-orange-lt text-orange avatar"><icon name="refresh" /></span></div>
+                    <div class="col">
+                        <div class="font-weight-medium">@Model.Summary.ActiveCampaigns active</div>
+                        <div class="text-secondary">Upgrade Tasks</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> *@
+
+    @* ── Trend widgets ── *@
+    <div class="col-lg-6">
+        <div x-data="trendChart('newDevices', { color: 'primary', suffix: '' })" x-init="load()"
+             class="card shadow-sm h-100">
+            <div class="card-header">
+                <h3 class="card-title">New Device Trends</h3>
+                <div class="card-actions">
+                    <nav class="nav nav-segmented nav-1" role="tablist" aria-label="Time range">
+                        <template x-for="opt in [7, 14, 30]" :key="opt">
+                            <button type="button"
+                                    class="nav-link"
+                                    role="tab"
+                                    :class="days === opt ? 'active' : ''"
+                                    :aria-selected="days === opt ? 'true' : 'false'"
+                                    :tabindex="days === opt ? '0' : '-1'"
+                                    @@click="setDays(opt)"
+                                    x-text="opt + ' Days'"></button>
+                        </template>
+                    </nav>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-baseline gap-2 mb-1">
+                    <span class="h2 mb-0 fw-bold" x-text="total"></span>
+                    <span class="text-secondary">new devices in the selected period</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="d-inline-block rounded-circle bg-primary" style="width:8px;height:8px;"></span>
+                    <span class="text-secondary small">New devices per day</span>
+                </div>
+                <div class="position-relative" style="min-height:220px;">
+                    <div class="text-secondary text-center py-5" x-show="!loading && points.length === 0">No data for this period.</div>
+                    <div class="text-secondary text-center py-5" x-show="loading"><h5>Loading<span class="animated-dots"></span></h5></div>
+                    <div x-show="!loading && points.length > 0" x-html="renderChart()"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div x-data="trendChart('onlineRatePercent', { color: 'success', suffix: '%' })" x-init="load()"
+             class="card shadow-sm h-100">
+            <div class="card-header">
+                <h3 class="card-title">Online Rate Trend</h3>
+                <div class="card-actions">
+                    <nav class="nav nav-segmented nav-1" role="tablist" aria-label="Time range">
+                        <template x-for="opt in [7, 14, 30]" :key="opt">
+                            <button type="button"
+                                    class="nav-link"
+                                    role="tab"
+                                    :class="days === opt ? 'active' : ''"
+                                    :aria-selected="days === opt ? 'true' : 'false'"
+                                    :tabindex="days === opt ? '0' : '-1'"
+                                    @@click="setDays(opt)"
+                                    x-text="opt + ' Days'"></button>
+                        </template>
+                    </nav>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-baseline gap-2 mb-1">
+                    <span class="h2 mb-0 fw-bold" x-text="average + '%'"></span>
+                    <span class="text-secondary">average online rate over the selected period</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="d-inline-block rounded-circle bg-success" style="width:8px;height:8px;"></span>
+                    <span class="text-secondary small">Online rate per day</span>
+                </div>
+                <div class="position-relative" style="min-height:220px;">
+                    <div class="text-secondary text-center py-5" x-show="!loading && points.length === 0">No data for this period.</div>
+                    <div class="text-secondary text-center py-5" x-show="loading"><h5>Loading<span class="animated-dots"></span></h5></div>
+                    <div x-show="!loading && points.length > 0" x-html="renderChart()"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        function trendChart(metricKey, opts) {
+            const palette = {
+                primary: { line: '#206bc4', fill: 'rgba(32,107,196,0.14)' },
+                success: { line: '#2fb344', fill: 'rgba(47,179,68,0.14)' },
+            };
+            const colors = palette[opts.color] || palette.primary;
+
+            return {
+                days: 7,
+                points: [],
+                loading: true,
+                total: 0,
+                average: 0,
+
+                async load() {
+                    this.loading = true;
+                    try {
+                        const res = await fetch(window.location.pathname + '?handler=Trends&days=' + this.days,
+                            { headers: { 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
+                        this.points = res.ok ? await res.json() : [];
+                    } catch {
+                        this.points = [];
+                    }
+
+                    const values = this.points.map(p => Number(p[metricKey]) || 0);
+                    this.total = values.reduce((a, b) => a + b, 0);
+                    this.average = values.length
+                        ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10
+                        : 0;
+                    this.loading = false;
+                },
+
+                setDays(d) {
+                    if (this.days === d) return;
+                    this.days = d;
+                    this.load();
+                },
+
+                renderChart() {
+                    const values = this.points.map(p => Number(p[metricKey]) || 0);
+                    const labels = this.points.map(p => p.date);
+                    if (values.length === 0) return '';
+
+                    const width = 600, height = 220;
+                    const padTop = 16, padBottom = 32, padLeft = 8, padRight = 8;
+                    const plotW = width - padLeft - padRight;
+                    const plotH = height - padTop - padBottom;
+
+                    const maxVal = Math.max(1, ...values);
+                    const niceMax = maxVal <= 5 ? 5 : Math.ceil(maxVal * 1.15);
+
+                    const xFor = i => values.length === 1
+                        ? padLeft + plotW / 2
+                        : padLeft + (plotW * i) / (values.length - 1);
+                    const yFor = v => padTop + plotH - (plotH * v) / niceMax;
+
+                    const pts = values.map((v, i) => [xFor(i), yFor(v)]);
+
+                    // Catmull-Rom → cubic-bezier smoothing for a smooth line.
+                    const smoothPath = (points) => {
+                        if (points.length < 2) return `M ${points[0][0]},${points[0][1]}`;
+                        let d = `M ${points[0][0]},${points[0][1]}`;
+                        for (let i = 0; i < points.length - 1; i++) {
+                            const p0 = points[i === 0 ? 0 : i - 1];
+                            const p1 = points[i];
+                            const p2 = points[i + 1];
+                            const p3 = points[i + 2] || p2;
+                            const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+                            const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+                            const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+                            const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+                            d += ` C ${c1x},${c1y} ${c2x},${c2y} ${p2[0]},${p2[1]}`;
+                        }
+                        return d;
+                    };
+
+                    const linePath = smoothPath(pts);
+                    const areaPath = `${linePath} L ${pts[pts.length - 1][0]},${padTop + plotH} L ${pts[0][0]},${padTop + plotH} Z`;
+
+                    const gridLines = [0, 0.25, 0.5, 0.75, 1].map(f => {
+                        const y = padTop + plotH * (1 - f);
+                        return `<line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="var(--tblr-border-color)" stroke-width="1" stroke-dasharray="3,3" />`;
+                    }).join('');
+
+                    // Show every Nth x-axis label so 30-day ranges stay readable.
+                    const labelStep = Math.max(1, Math.ceil(labels.length / 7));
+                    const xLabels = labels.map((lbl, i) => {
+                        if (i % labelStep !== 0 && i !== labels.length - 1) return '';
+                        return `<text x="${xFor(i)}" y="${height - 8}" font-size="10" fill="var(--tblr-secondary-color)" text-anchor="middle">${lbl}</text>`;
+                    }).join('');
+
+                    const markers = pts.map((p, i) => `
+                        <g class="trend-point">
+                            <circle cx="${p[0]}" cy="${p[1]}" r="9" fill="transparent" />
+                            <circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#fff" stroke="${colors.line}" stroke-width="2" />
+                            <title>${labels[i]}: ${values[i]}${opts.suffix}</title>
+                        </g>`).join('');
+
+                    return `
+                        <svg viewBox="0 0 ${width} ${height}" width="100%" height="220" preserveAspectRatio="none" style="overflow:visible;">
+                            <defs>
+                                <linearGradient id="grad-${metricKey}" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="${colors.line}" stop-opacity="0.28" />
+                                    <stop offset="100%" stop-color="${colors.line}" stop-opacity="0" />
+                                </linearGradient>
+                            </defs>
+                            ${gridLines}
+                            <path d="${areaPath}" fill="url(#grad-${metricKey})" stroke="none" />
+                            <path d="${linePath}" fill="none" stroke="${colors.line}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                            ${markers}
+                            ${xLabels}
+                        </svg>`;
+                },
+            };
+        }
+    </script>
+}

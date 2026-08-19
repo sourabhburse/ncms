@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>NCMS.IoT.DeviceManagement</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <!-- Pins the transitive Microsoft.OpenApi dependency past the vulnerable 2.0.0 — see the
+         comment in Directory.Packages.props. -->
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <!-- Logging.Abstractions + Options.ConfigurationExtensions come from the
+         Microsoft.AspNetCore.App shared framework referenced above; no PackageReference needed. -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NCMS.Shared\NCMS.Shared.csproj" />
+    <ProjectReference Include="..\NCMS.Persistence\NCMS.Persistence.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Core\NCMS.IoT.Core.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.MqttClient\NCMS.IoT.MqttClient.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.DeviceManagement.Contracts\NCMS.IoT.DeviceManagement.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

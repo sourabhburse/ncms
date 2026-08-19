@@ -1,0 +1,41 @@
+@*
+    Task-detail progress: donut + legend.
+    Rendered inside a page's Alpine x-data scope; the host component must expose:
+      - detail.data.progress.total   (number)
+      - donutSegments()              → [{ label, color, count, pct, pctLabel }]
+    Used by Firmware / Configuration / Application task-detail modals.
+
+    The ring is a CSS conic-gradient (not SVG): an <svg> with <template x-for> would
+    instantiate <circle> elements in the HTML namespace and never paint, so the gradient
+    approach is both simpler and reactive.
+*@
+<div class="d-flex flex-wrap align-items-center justify-content-center gap-5">
+    @* ── Donut (conic-gradient disc + inner hole) ── *@
+    <div class="position-relative flex-shrink-0 mx-auto mx-md-0 rounded-circle" style="width:170px;height:170px;"
+         :style="{ background: (() => {
+             const segs = donutSegments();
+             let acc = 0; const parts = [];
+             segs.forEach(s => { if (s.count > 0) { parts.push(s.color + ' ' + acc + '% ' + (acc + s.pct) + '%'); acc += s.pct; } });
+             parts.push('#edeef0 ' + acc + '% 100%');
+             return 'conic-gradient(' + parts.join(', ') + ')';
+         })() }">
+        @* Inner hole — turns the disc into a ring. *@
+        <div class="position-absolute top-50 start-50 translate-middle rounded-circle bg-white" style="width:126px;height:126px;"></div>
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <div class="h1 m-0 fw-bold" x-text="detail.data.progress.total"></div>
+            <div class="text-secondary small">Total Devices</div>
+        </div>
+    </div>
+
+    @* ── Legend ── *@
+    <div style="width:22rem;max-width:100%;">
+        <template x-for="s in donutSegments()" :key="s.label">
+            <div class="d-flex align-items-center py-2">
+                <span class="me-2 d-inline-block rounded-circle flex-shrink-0" style="width:10px;height:10px;" :style="{ background: s.color }"></span>
+                <span class="flex-fill" x-text="s.label"></span>
+                <span class="fw-bold text-end" style="width:2.5rem;" x-text="s.count"></span>
+                <span class="text-secondary text-end ms-4" style="width:3.5rem;" x-text="'(' + s.pctLabel + '%)'"></span>
+            </div>
+        </template>
+    </div>
+</div>

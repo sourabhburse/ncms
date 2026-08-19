@@ -1,0 +1,23 @@
+<meta charset="utf-8">
+<title>
+@if (ViewBag.Title?.Length > 0)
+{
+	<text>@ViewData["Title"] @(ViewData["Category1"]!=null?(" - "  + ViewData["Category1"]):"") - @Settings.App v@(Settings.Version)</text>
+} else {
+	@Settings.App
+}
+</title>
+<base href="~/"/>
+<meta name="description" content="@ViewBag.Title">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, minimal-ui">
+<meta name="msapplication-tap-highlight" content="no">
+@* Bootstrap CSS is NOT loaded separately — tabler.min.css already bundles all of
+   Bootstrap. The standalone bootstrap.min.css injected a competing blue button
+   focus style (--bs-btn-focus-shadow-rgb), overriding Tabler's variant colours. *@
+<link rel="stylesheet" href="~/lib/inter/inter.css" />
+<link rel="stylesheet" href="~/lib/tabler/tabler.min.css" />
+<link rel="stylesheet" href="~/lib/tabler-icons/webfont/tabler-icons.min.css" />
+<link rel="stylesheet" href="~/lib/toastr/toastr.min.css" />
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/nav.css" asp-append-version="true" />

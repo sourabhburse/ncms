@@ -1,0 +1,324 @@
+@page
+@using NCMS.IoT.DeviceManagement.Contracts.Enums
+@using NCMS.IoT.DeviceManagement.Contracts.Permissions
+@model NCMS.IoT.Host.Pages.Configuration.Profiles.IndexModel
+@{
+    ViewData["Title"] = "Configuration Profiles";
+    ViewData["Pretitle"] = "Configuration";
+    ViewData["Purpose"] = "Create and manage configuration profiles that devices can receive during configuration tasks.";
+    ViewData["HeaderIcon"] = "file-settings";
+}
+
+<style>
+    [x-cloak]{display:none !important;}
+    .actions-menu{min-width:11rem;box-shadow:0 .5rem 1.5rem rgba(0,0,0,.18);}
+    .actions-menu .dropdown-item{padding:.5rem .9rem;font-size:.875rem;}
+    .actions-menu .dropdown-item .icon{width:1.1rem;height:1.1rem;}
+</style>
+
+<div x-data="tableController" data-table-controller>
+<!-- ── Filter bar (server-side GET; intercepted for partial updates) ──────── -->
+<form method="get" @@submit.prevent="onSubmit($event)">
+    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+    <div class="card card-sm mb-3">
+        <div class="card-body">
+            <div class="d-grid" style="grid-template-columns:minmax(0,1fr) auto;column-gap:1rem;align-items:end;">
+
+                <!-- Filters -->
+                <div class="d-flex flex-wrap gap-2 align-items-end">
+
+                    <!-- Profile Name -->
+                    <div style="min-width:260px;flex:0 1 260px;">
+                        <label class="form-label small text-secondary mb-1">Profile Name</label>
+                        <input type="text" name="name" value="@Model.Name"
+                               class="form-control form-control-sm" placeholder="Profile name" />
+                    </div>
+
+                    <!-- Product Model -->
+                    <div style="min-width:220px;flex:0 1 220px;">
+                        <label class="form-label small text-secondary mb-1">Product Model</label>
+                        <select name="filterProductId" class="form-select form-select-sm">
+                            <option value="">All Models</option>
+                            @foreach (var p in Model.ProductOptions)
+                            {
+                                <option value="@p.Value" selected="@(Model.FilterProductId?.ToString() == p.Value)">@p.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div style="min-width:140px;flex:0 1 140px;">
+                        <label class="form-label small text-secondary mb-1">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            <option value="Enable" selected="@(Model.Status == ProfileStatus.Enable)">Enabled</option>
+                            <option value="Disable" selected="@(Model.Status == ProfileStatus.Disable)">Disabled</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Search / Reset -->
+                <div class="align-self-start">
+                    <!-- Invisible label keeps the buttons aligned with the first-row inputs (not the labels). -->
+                    <label class="form-label small text-secondary mb-1" aria-hidden="true" style="visibility:hidden;">&nbsp;</label>
+                    <div class="d-flex gap-2 flex-nowrap">
+                        <button type="submit" class="btn btn-sm btn-primary text-nowrap">
+                            Search
+                        </button>
+                        <a asp-page="/Configuration/Profiles/Index" class="btn btn-sm btn-outline-secondary text-nowrap">Reset</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</form>
+
+<div x-data="profileIndex()">
+
+    <!-- ── Results (swapped in place by tableController) ────────────────────── -->
+    <div id="results" @@click="onClick($event)" @@change="onChange($event)"
+         :class="{ 'opacity-50 pe-none': tableLoading }" style="transition:opacity .15s">
+        <partial name="_Results" model="Model" />
+    </div>
+
+    <!-- ── Create / Edit modal ──────────────────────────────────────────── -->
+    <template x-if="form.show">
+        <div>
+            <div class="modal modal-blur fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <form class="modal-content" method="post" asp-page-handler="Save" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title" x-text="form.id ? 'Edit Config File' : 'New Config File'"></h5>
+                            <button type="button" class="btn-close" @@click="form.show = false"></button>
+                        </div>
+                        <div class="modal-body loading-region" :class="{ 'is-loading': formLoading }">
+                            <input type="hidden" name="Id" :value="form.id || '00000000-0000-0000-0000-000000000000'" />
+
+                            <div class="mb-3">
+                                <label class="form-label required">Profile Name</label>
+                                <input name="ProfileName" class="form-control" maxlength="200" required x-model="form.profileName"
+                                       placeholder="Please enter config file name" autocomplete="off" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label required">Product Model</label>
+                                <select name="ProductId" class="form-select" required x-model="form.productId">
+                                    <option value="">Please select a product model that supports configuration</option>
+                                    @foreach (var p in Model.ProductOptions)
+                                    {
+                                        <option value="@p.Value">@p.Text</option>
+                                    }
+                                </select>
+                                @if (Model.ProductOptions.Count == 0)
+                                {
+                                    <div class="form-hint text-danger">No products are flagged for configuration yet.</div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" :class="!form.id && 'required'">Config File</label>
+                                <div class="mb-2" x-show="form.existingFile && !newFileName">
+                                    <span class="text-primary fw-medium text-truncate" x-text="form.existingFile"></span>
+                                    <span class="text-secondary small ms-1">(current — upload a new file to replace)</span>
+                                </div>
+                                <label class="upload-dropzone">
+                                    <icon name="cloud-upload" size="48" class="text-secondary mb-2" />
+                                    <div x-text="form.id ? 'Click or drag a new config file to replace' : 'Click or drag the config file here to upload'"></div>
+                                    <small>The selected file is uploaded when you confirm.</small>
+                                    <span class="fw-medium text-primary mt-2" x-show="newFileName" x-text="newFileName"></span>
+                                    <input type="file" name="File" :required="!form.id"
+                                           @@change="newFileName = $event.target.files[0]?.name || ''" />
+                                </label>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Remark</label>
+                                <textarea name="Remark" class="form-control" rows="3" maxlength="2000"
+                                          x-model="form.remark" placeholder="Please enter"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn" @@click="form.show = false">Close</button>
+                            <button type="submit" class="btn btn-primary">Confirm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        </div>
+    </template>
+
+    <!-- ── View modal ───────────────────────────────────────────────────── -->
+    <template x-if="detail.show">
+        <div>
+            <div class="modal modal-blur fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                    <div class="modal-content overflow-hidden">
+                        <div class="modal-status"
+                             :class="detail.data ? (detail.data.isEnabled ? 'bg-success' : 'bg-secondary') : 'bg-primary'"></div>
+                        <div class="modal-header">
+                            <h5 class="modal-title">View Config File</h5>
+                            <button type="button" class="btn-close" @@click="detail.show = false"></button>
+                        </div>
+                        <div class="modal-body">
+                            <template x-if="!detail.data && !detail.error">
+                                <div class="text-secondary text-center py-6">
+                                    <div class="spinner-border text-blue mb-2" role="status"></div>
+                                    <div>Loading config details…</div>
+                                </div>
+                            </template>
+                            <template x-if="detail.error">
+                                <div class="alert alert-danger" x-text="detail.error"></div>
+                            </template>
+                            <template x-if="detail.data">
+                                <div>
+                                    @* ── Hero header ── *@
+                                    <div class="d-flex align-items-center mb-4">
+                                        <span class="avatar avatar-lg me-3"
+                                              :class="detail.data.isEnabled ? 'bg-green-lt text-green' : 'bg-secondary-lt text-secondary'">
+                                            <icon name="file-settings" size="30" />
+                                        </span>
+                                        <div class="flex-fill" style="min-width:0">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h2 class="m-0 text-truncate" x-text="detail.data.profileName"></h2>
+                                                <span class="badge"
+                                                      :class="detail.data.isEnabled ? 'bg-green-lt' : 'bg-secondary-lt'"
+                                                      x-text="detail.data.isEnabled ? 'Enable' : 'Disable'"></span>
+                                            </div>
+                                            <div class="text-secondary mt-1">
+                                                <span x-text="detail.data.productModel || '—'"></span>
+                                                <span class="mx-2">·</span><span x-text="sizeMb(detail.data.size)"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @* ── Config file card ── *@
+                                    <div class="card card-sm mb-4">
+                                        <div class="card-body d-flex align-items-center">
+                                            <span class="avatar bg-azure-lt text-azure me-3"><icon name="file-text" /></span>
+                                            <div class="flex-fill" style="min-width:0">
+                                                <div class="text-secondary small">Config File</div>
+                                                <div class="fw-medium text-truncate" x-text="detail.data.fileName || '—'"></div>
+                                            </div>
+                                            <a class="btn btn-primary ms-3 flex-shrink-0"
+                                               asp-permission="@DeviceManagementPermissions.ConfigProfiles.Download"
+                                               x-show="detail.data.storagePath"
+                                               :href="window.location.pathname + '?handler=Download&id=' + detail.data.id">
+                                                <icon name="download" /> Download
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    @* ── Detail grid ── *@
+                                    <div class="datagrid mb-4">
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">Product Model</div>
+                                            <div class="datagrid-content" x-text="detail.data.productModel || '—'"></div>
+                                        </div>
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">File Size</div>
+                                            <div class="datagrid-content" x-text="sizeMb(detail.data.size)"></div>
+                                        </div>
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">Created By</div>
+                                            <div class="datagrid-content" x-text="detail.data.createdBy || '—'"></div>
+                                        </div>
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">Create Time</div>
+                                            <div class="datagrid-content" x-text="fmt(detail.data.createdAt)"></div>
+                                        </div>
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">Remark</div>
+                                            <div class="datagrid-content" x-text="detail.data.remark || '—'"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn" @@click="detail.show = false">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        </div>
+    </template>
+</div>
+</div>
+
+@section Scripts {
+    <script>
+        // Row-action dropdowns live inside the responsive table wrapper (overflow: auto),
+        // which would clip the menu. Float the menu with Popper's "fixed" strategy and pin
+        // it to "bottom-end" so it opens down-and-left from the toggle.
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.table [data-bs-toggle="dropdown"]').forEach(function (el) {
+                bootstrap.Dropdown.getOrCreateInstance(el, {
+                    popperConfig: function (cfg) {
+                        cfg.strategy = 'fixed';
+                        cfg.placement = 'bottom-end';
+                        return cfg;
+                    }
+                });
+            });
+        });
+
+        function profileIndex() {
+            return {
+                newFileName: '',
+                formLoading: false,
+                detail: { show: false, data: null, error: null },
+                form: { show: false, id: '', profileName: '', productId: '', remark: '', existingFile: '' },
+
+                openCreate() {
+                    this.newFileName = '';
+                    this.form = { show: true, id: '', profileName: '', productId: '', remark: '', existingFile: '' };
+                },
+
+                async openEdit(id) {
+                    this.newFileName = '';
+                    this.form = { show: true, id, profileName: '', productId: '', remark: '', existingFile: '' };
+                    this.formLoading = true;
+                    try {
+                        const res = await fetch(window.location.pathname + '?handler=Detail&id=' + encodeURIComponent(id),
+                            { headers: { 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
+                        const d = await res.json();
+                        if (d && !d.error) {
+                            const empty = '00000000-0000-0000-0000-000000000000';
+                            this.form.profileName = d.profileName || '';
+                            this.form.productId = (d.productId && d.productId !== empty) ? d.productId : '';
+                            this.form.remark = d.remark || '';
+                            this.form.existingFile = d.fileName || '';
+                        }
+                    } catch (e) { /* leave fields blank on failure */
+                    } finally { this.formLoading = false; }
+                },
+
+                async openDetail(id) {
+                    this.detail = { show: true, data: null, error: null };
+                    try {
+                        const res = await fetch(window.location.pathname + '?handler=Detail&id=' + encodeURIComponent(id),
+                            { headers: { 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
+                        const text = await res.text();
+                        let body = null;
+                        try { body = JSON.parse(text); } catch { /* not JSON */ }
+                        if (body && body.error) { this.detail.error = body.error; return; }
+                        if (!res.ok || body === null) {
+                            this.detail.error = 'Could not load config details (HTTP ' + res.status + ').';
+                            return;
+                        }
+                        this.detail.data = body;
+                    } catch (e) {
+                        this.detail.error = 'Network error loading config details: ' + e.message;
+                    }
+                },
+
+                fmt(s) { return s ? new Date(s).toLocaleString() : '—'; },
+                sizeMb(b) { return b > 0 ? (b / 1024 / 1024).toFixed(2) + ' MB' : '—'; }
+            };
+        }
+    </script>
+}

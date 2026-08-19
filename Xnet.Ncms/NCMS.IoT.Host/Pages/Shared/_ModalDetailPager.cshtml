@@ -1,0 +1,45 @@
+@*
+    Server-side pager for the read-only assigned-device list inside the task-detail modals
+    (Application / Firmware / Config tasks). Same look as the app-wide _Pager — "Total N" + an
+    outline, numbered pagination + the "N / page" selector — right-aligned per the modal
+    convention. Each page is fetched from the server (the detail query's page/pageSize), so no
+    client-side slicing.
+
+    Expects the enclosing Alpine scope to expose:
+      detailTotal             – total assigned devices (server count)
+      detailPage              – current page (1-based)
+      detailPageSize          – rows per page (25 / 50 / 100)
+      detailPages()           – total page count
+      loadDetailPage(page)    – fetches the given page from the server
+      setDetailPageSize(size) – changes page size and reloads from page 1
+*@
+<div class="d-flex align-items-center flex-wrap gap-3 justify-content-end" x-show="detailTotal > 0">
+    <span class="text-secondary small">Total <span class="fw-bold text-body" x-text="detailTotal"></span></span>
+
+    <select class="form-select form-select-sm w-auto" aria-label="Rows per page"
+            @@change="setDetailPageSize($event.target.value)">
+        <option value="25" :selected="detailPageSize === 25">25 / page</option>
+        <option value="50" :selected="detailPageSize === 50">50 / page</option>
+        <option value="100" :selected="detailPageSize === 100">100 / page</option>
+    </select>
+
+    <ul class="pagination pagination-outline m-0">
+        <li class="page-item" :class="{ disabled: detailPage <= 1 }">
+            <button type="button" class="page-link" aria-label="Previous" @@click="loadDetailPage(detailPage - 1)">
+                <icon name="chevron-left" />
+            </button>
+        </li>
+        <template x-for="p in pagerWindow(detailPage, detailPages())" :key="p">
+            <li class="page-item" :class="{ active: p === detailPage }" :aria-current="p === detailPage ? 'page' : null">
+                @* Active page is a non-clickable span; other pages load that page from the server. *@
+                <span class="page-link" x-show="p === detailPage" x-text="p"></span>
+                <button type="button" class="page-link" x-show="p !== detailPage" x-text="p" @@click="loadDetailPage(p)"></button>
+            </li>
+        </template>
+        <li class="page-item" :class="{ disabled: detailPage >= detailPages() }">
+            <button type="button" class="page-link" aria-label="Next" @@click="loadDetailPage(detailPage + 1)">
+                <icon name="chevron-right" />
+            </button>
+        </li>
+    </ul>
+</div>

@@ -1,0 +1,99 @@
+@page
+@using NCMS.IoT.Identity.Contracts.Enums
+@model NCMS.IoT.Host.Pages.SystemManagement.AuditLog.IndexModel
+@{
+    ViewData["Title"] = "Audit Log";
+    ViewData["Pretitle"] = "System Management";
+    ViewData["Purpose"] = "Login/logout history and security-related events (failed logins, password changes, role and permission changes).";
+    ViewData["HeaderIcon"] = "history";
+
+    var pager = new NCMS.IoT.Host.Models.PagerInfo
+    {
+        Page = Model.Result.PageNumber,
+        PageSize = Model.Result.PageSize,
+        Total = (int)Model.Result.TotalCount,
+        PageName = "/SystemManagement/AuditLog/Index",
+        PageSizeOptions = Model.PageSizeOptions,
+        Query = Model.FilterRouteValues()
+    };
+}
+
+<!-- ── Filter bar ───────────────────────────────────────────────────────── -->
+<form method="get">
+    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+    <div class="card card-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 align-items-end">
+                <div style="min-width:220px;">
+                    <label class="form-label small text-secondary mb-1">Event type</label>
+                    <select name="eventType" class="form-select form-select-sm">
+                        <option value="">All events</option>
+                        @foreach (var e in Enum.GetValues<AuditEventType>())
+                        {
+                            <option value="@e" selected="@(Model.EventType == e)">@e</option>
+                        }
+                    </select>
+                </div>
+                <div style="min-width:220px;flex:1 1 260px;">
+                    <label class="form-label small text-secondary mb-1">Search</label>
+                    <input type="text" name="search" value="@Model.Search" class="form-control form-control-sm"
+                           placeholder="User, actor, or description" />
+                </div>
+                <div>
+                    <label class="form-label small text-secondary mb-1">From</label>
+                    <input type="date" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                </div>
+                <div>
+                    <label class="form-label small text-secondary mb-1">To</label>
+                    <input type="date" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary">Search</button>
+                    <a asp-page="/SystemManagement/AuditLog/Index" class="btn btn-sm btn-outline-secondary">Reset</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Occurred At</th>
+                    <th>Event</th>
+                    <th>Subject</th>
+                    <th>Actor</th>
+                    <th>Description</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.Result.Items)
+                {
+                    var badgeClass = a.EventType switch
+                    {
+                        AuditEventType.LoginFailed => "bg-danger-lt",
+                        AuditEventType.UserDeleted or AuditEventType.RoleDeleted => "bg-danger-lt",
+                        AuditEventType.LoginSucceeded => "bg-success-lt",
+                        _ => "bg-blue-lt"
+                    };
+                    <tr>
+                        <td class="text-nowrap">@a.OccurredAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td><span class="badge @badgeClass">@a.EventType</span></td>
+                        <td>@a.SubjectDisplay</td>
+                        <td>@a.ActorDisplay</td>
+                        <td>@a.Description</td>
+                        <td>@a.IpAddress</td>
+                    </tr>
+                }
+                @if (Model.Result.Items.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-secondary py-4">No matching events.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="pager" />
+</div>

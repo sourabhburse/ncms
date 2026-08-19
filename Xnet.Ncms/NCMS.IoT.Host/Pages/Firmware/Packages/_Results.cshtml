@@ -1,0 +1,98 @@
+@model NCMS.IoT.Host.Pages.Firmware.Packages.IndexModel
+@using NCMS.IoT.DeviceManagement.Contracts.Permissions
+@*
+    Results region for Firmware Packages — swapped in by tableController. Row action buttons
+    (@click) bind to the page's `pkgIndex` component; Alpine re-initialises them after each swap.
+*@
+@{
+    SortHeaderVm Sortable(string key, string label) => new()
+    {
+        Key = key,
+        Label = label,
+        CurrentSort = Model.Sort,
+        PageName = "/Firmware/Packages/Index",
+        RouteValues = Model.FilterRouteValues()
+    };
+}
+<div class="card">
+    <div class="card-body">
+        <div class="btn-list">
+            <button type="button" class="btn btn-primary" asp-permission="@DeviceManagementPermissions.Packages.Add" @@click="openCreate()">
+                <i class="ti ti-plus me-1"></i>Add Package
+            </button>
+        </div>
+    </div>
+    <div id="advanced-table">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table table-hover">
+                <thead>
+                    <tr>
+                        <th class="w-1">#</th>
+                        <th><partial name="_SortHeader" model='Sortable("name", "Name")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("version", "Version")' /></th>
+                        <th>Product Model</th>
+                        <th><partial name="_SortHeader" model='Sortable("size", "Size")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("status", "Status")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("uploaded", "Uploaded")' /></th>
+                        <th class="text-center col-actions">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="table-tbody">
+                    @{ var idx = (Model.Result.PageNumber - 1) * Model.Result.PageSize; }
+                    @foreach (var p in Model.Packages)
+                    {
+                        idx++;
+                        <tr>
+                            <td class="text-secondary">@idx</td>
+                            <td>
+                                <a href="#" class="text-reset fw-medium" @@click.prevent="openDetail('@p.Id')">@p.Name</a>
+                            </td>
+                            <td><span class="font-monospace">@p.Version</span></td>
+                            <td><span class="text-secondary">@Format.OrDash(p.ProductModel)</span></td>
+                            <td>@(p.Size > 0 ? $"{p.Size / 1024.0 / 1024.0:F2} MB" : "—")</td>
+                            <td>
+                                <span class="badge bg-@(p.IsEnabled ? "green" : "secondary")-lt">
+                                    @(p.IsEnabled ? "Enable" : "Disable")
+                                </span>
+                            </td>
+                            <td class="text-nowrap">@p.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-center text-nowrap col-actions">
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <button type="button" class="btn btn-link btn-sm p-1 text-primary"
+                                            asp-permission="@DeviceManagementPermissions.Packages.View"
+                                            @@click="openDetail('@p.Id')">View</button>
+                                    <form method="post" asp-page-handler="Toggle" class="d-inline" asp-permission="@DeviceManagementPermissions.Packages.EnableDisable">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <input type="hidden" name="enable" value="@((!p.IsEnabled).ToString().ToLowerInvariant())" />
+                                        <button type="submit" class="btn btn-link btn-sm p-1 @(p.IsEnabled ? "text-warning" : "text-success")">
+                                            @(p.IsEnabled ? "Disable" : "Enable")
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-link btn-sm p-1 text-secondary" disabled="@p.IsEnabled"
+                                            asp-permission="@DeviceManagementPermissions.Packages.Edit"
+                                            @@click="openEdit('@p.Id')">Edit</button>
+                                    <form method="post" asp-page-handler="Delete" class="d-inline" asp-permission="@DeviceManagementPermissions.Packages.Delete">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <button type="button" class="btn btn-link btn-sm p-1 text-danger" disabled="@p.IsEnabled"
+                                                data-item-name="@p.Name @p.Version"
+                                                @@click="confirmAction('', 'Do you want to delete the Firmware Package?', () => $el.closest('form').requestSubmit(), { itemName: $el.dataset.itemName })">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Packages.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-secondary py-4">
+                                No firmware packages match the current filters.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @{ var pager = PagerInfo.From(Model.Result, "/Firmware/Packages/Index", Model.FilterRouteValues(), "center", Model.PageSizeOptions); }
+    <partial name="_Pager" model="pager" />
+</div>

@@ -1,0 +1,787 @@
+{
+  "title": "Site Configuration",
+  "sections": [
+    {
+      "key": "site",
+      "title": "Site",
+      "description": "Site information",
+      "collapsedByDefault": false,
+      "fields": [
+        {
+          "key": "site_name",
+          "label": "Site Name",
+          "type": "Text",
+          "placeholder": "Enter site name",
+          "helpText": "The name of the site",
+          "defaultValue": "My Site",
+          "readOnly": false,
+          "validationRules": [
+            {
+              "op": "required",
+              "message": "Site name is required"
+            },
+            {
+              "op": "matches",
+              "args": [
+                { "path": "$self" },
+                { "literal": "^[A-Za-z0-9\\s-]+$" }
+              ],
+              "message": "Site name can only contain letters, numbers, spaces, and hyphens"
+            }
+          ]
+        },
+        {
+          "key": "site_id",
+          "label": "Site ID",
+          "type": "Number",
+          "placeholder": "Enter site ID",
+          "helpText": "Unique identifier for the site",
+          "defaultValue": 1,
+          "readOnly": false,
+          "min": 1,
+          "max": 9999,
+          "validationRules": [
+            {
+              "op": "required",
+              "message": "Site ID is required"
+            },
+            {
+              "op": "gte",
+              "args": [
+                { "path": "$self" },
+                { "literal": 1 }
+              ],
+              "message": "Site ID must be at least 1"
+            },
+            {
+              "op": "lte",
+              "args": [
+                { "path": "$self" },
+                { "literal": 9999 }
+              ],
+              "message": "Site ID must be at most 9999"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "groups",
+      "title": "Schedule Groups",
+      "description": "Group configuration for scheduling",
+      "collapsedByDefault": false,
+      "fields": [
+        {
+          "key": "groups",
+          "label": "Groups",
+          "type": "Array",
+          "minItems": 1,
+          "maxItems": 10,
+          "helpText": "List of schedule groups",
+          "itemSchema": {
+            "key": "group",
+            "label": "Group",
+            "type": "Object",
+            "fields": [
+              {
+                "key": "group_id",
+                "label": "Group ID",
+                "type": "Number",
+                "placeholder": "Enter group ID",
+                "min": 1,
+                "max": 1000,
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Group ID is required"
+                  },
+                  {
+                    "op": "gte",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": 1 }
+                    ],
+                    "message": "Group ID must be at least 1"
+                  },
+                  {
+                    "op": "lte",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": 1000 }
+                    ],
+                    "message": "Group ID must be at most 1000"
+                  }
+                ]
+              },
+              {
+                "key": "group_name",
+                "label": "Group Name",
+                "type": "Text",
+                "placeholder": "Enter group name",
+                "helpText": "Name of the schedule group",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Group name is required"
+                  },
+                  {
+                    "op": "matches",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": "^[A-Za-z0-9_-]+$" }
+                    ],
+                    "message": "Group name can only contain letters, numbers, underscores, and hyphens"
+                  }
+                ]
+              },
+              {
+                "key": "schedule_cron",
+                "label": "Cron Expression",
+                "type": "Text",
+                "placeholder": "*/30 * * * * *",
+                "helpText": "Cron schedule expression",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Cron expression is required"
+                  },
+                  {
+                    "op": "matches",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": "^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\\d+(ns|us|µs|ms|s|m|h))+)|((((\\d+,)+\\d+|(\\d+(\\/|-)\\d*)|\\d+|\\*) ?){5,7})$" }
+                    ],
+                    "message": "Invalid cron expression format"
+                  }
+                ]
+              },
+              {
+                "key": "is_enabled",
+                "label": "Enabled",
+                "type": "Checkbox",
+                "defaultValue": true,
+                "helpText": "Whether this group is enabled"
+              }
+            ]
+          },
+          "validationRules": [
+            {
+              "op": "required",
+              "message": "At least one group is required"
+            },
+            {
+              "op": "unique_in",
+              "scope": "groups[]",
+              "args": [
+                { "path": "group_id" }
+              ],
+              "message": "Group IDs must be unique",
+              "filter": {
+                "op": "eq",
+                "args": [
+                  { "path": "is_enabled" },
+                  { "literal": true }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "modbus_devices",
+      "title": "Modbus Devices",
+      "description": "Modbus device configuration",
+      "collapsedByDefault": true,
+      "fields": [
+        {
+          "key": "modbus_devices",
+          "label": "Devices",
+          "type": "Array",
+          "minItems": 1,
+          "helpText": "List of Modbus devices",
+          "itemSchema": {
+            "key": "device",
+            "label": "Device",
+            "type": "Object",
+            "fields": [
+              {
+                "key": "device_id",
+                "label": "Device ID",
+                "type": "Number",
+                "placeholder": "Enter device ID",
+                "min": 1,
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Device ID is required"
+                  },
+                  {
+                    "op": "gte",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": 1 }
+                    ],
+                    "message": "Device ID must be at least 1"
+                  }
+                ]
+              },
+              {
+                "key": "device_name",
+                "label": "Device Name",
+                "type": "Text",
+                "placeholder": "Enter device name",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Device name is required"
+                  }
+                ]
+              },
+              {
+                "key": "device_type",
+                "label": "Device Type",
+                "type": "Text",
+                "placeholder": "Enter device type",
+                "helpText": "Type of Modbus device",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Device type is required"
+                  }
+                ]
+              },
+              {
+                "key": "make",
+                "label": "Make",
+                "type": "Text",
+                "placeholder": "Enter device make"
+              },
+              {
+                "key": "modbus_slave_id",
+                "label": "Modbus Slave ID",
+                "type": "Number",
+                "placeholder": "Enter slave ID",
+                "helpText": "Modbus slave ID (1-247)",
+                "min": 1,
+                "max": 247,
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Modbus slave ID is required"
+                  },
+                  {
+                    "op": "gte",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": 1 }
+                    ],
+                    "message": "Slave ID must be at least 1"
+                  },
+                  {
+                    "op": "lte",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": 247 }
+                    ],
+                    "message": "Slave ID must be at most 247"
+                  }
+                ]
+              },
+              {
+                "key": "plc_slave_id",
+                "label": "PLC Slave ID",
+                "type": "Number",
+                "placeholder": "Enter PLC slave ID",
+                "min": 1,
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "PLC slave ID is required"
+                  }
+                ]
+              },
+              {
+                "key": "uart_name",
+                "label": "UART",
+                "type": "Select",
+                "placeholder": "Select UART",
+                "helpText": "UART port name",
+                "options": [
+                  { "label": "UART1", "value": "UART1" },
+                  { "label": "UART2", "value": "UART2" },
+                  { "label": "UART3", "value": "UART3" }
+                ],
+                "defaultValue": "UART1",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "UART selection is required"
+                  }
+                ]
+              },
+              {
+                "key": "baud",
+                "label": "Baud Rate",
+                "type": "Select",
+                "placeholder": "Select baud rate",
+                "helpText": "Communication baud rate",
+                "options": [
+                  {
+                    "label": "1200 bps",
+                    "value": "1200"
+                  },
+                  {
+                    "label": "2400 bps",
+                    "value": "2400"
+                  },
+                  {
+                    "label": "4800 bps",
+                    "value": "4800"
+                  },
+                  {
+                    "label": "9600 bps",
+                    "value": "9600"
+                  },
+                  {
+                    "label": "19200 bps",
+                    "value": "19200"
+                  },
+                  {
+                    "label": "38400 bps",
+                    "value": "38400"
+                  },
+                  {
+                    "label": "57600 bps",
+                    "value": "57600"
+                  },
+                  {
+                    "label": "115200 bps",
+                    "value": "115200"
+                  }
+                ],
+                "defaultValue": "9600"
+              },
+              {
+                "key": "data_bits",
+                "label": "Data Bits",
+                "type": "Number",
+                "placeholder": "Enter data bits",
+                "helpText": "Number of data bits",
+                "min": 7,
+                "max": 8,
+                "defaultValue": 8,
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Data bits is required"
+                  },
+                  {
+                    "op": "in",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": 7 },
+                      { "literal": 8 }
+                    ],
+                    "message": "Data bits must be 7 or 8"
+                  }
+                ]
+              },
+              {
+                "key": "parity",
+                "label": "Parity",
+                "type": "Select",
+                "placeholder": "Select parity",
+                "helpText": "Parity setting",
+                "options": [
+                  { "label": "None", "value": "N" },
+                  { "label": "Even", "value": "E" },
+                  { "label": "Odd", "value": "O" }
+                ],
+                "defaultValue": "N",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Parity is required"
+                  }
+                ]
+              },
+              {
+                "key": "stopbits",
+                "label": "Stop Bits",
+                "type": "Number",
+                "placeholder": "Enter stop bits",
+                "helpText": "Number of stop bits",
+                "min": 1,
+                "max": 2,
+                "defaultValue": 1,
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Stop bits is required"
+                  },
+                  {
+                    "op": "in",
+                    "args": [
+                      { "path": "$self" },
+                      { "literal": 1 },
+                      { "literal": 2 }
+                    ],
+                    "message": "Stop bits must be 1 or 2"
+                  }
+                ]
+              },
+              {
+                "key": "modbus_connection",
+                "label": "Connection String",
+                "type": "Text",
+                "placeholder": "UART1-9600-8-N-1",
+                "helpText": "Modbus connection string format: UART-BAUD-DATA_PARITY-STOP",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Connection string is required"
+                  }
+                ]
+              },
+              {
+                "key": "site_id",
+                "label": "Site ID",
+                "type": "Number",
+                "placeholder": "Enter site ID",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Site ID is required"
+                  }
+                ]
+              },
+              {
+                "key": "site_name",
+                "label": "Site Name",
+                "type": "Text",
+                "placeholder": "Enter site name",
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "Site name is required"
+                  }
+                ]
+              },
+              {
+                "key": "send_json_data",
+                "label": "Send JSON Data",
+                "type": "Checkbox",
+                "defaultValue": true,
+                "helpText": "Whether to send JSON data"
+              },
+              {
+                "key": "is_aio_device",
+                "label": "AIO Device",
+                "type": "Checkbox",
+                "defaultValue": false,
+                "helpText": "Whether this is an AIO device"
+              },
+              {
+                "key": "queries",
+                "label": "Queries",
+                "type": "Array",
+                "minItems": 1,
+                "helpText": "Modbus queries for this device",
+                "itemSchema": {
+                  "key": "query",
+                  "label": "Query",
+                  "type": "Object",
+                  "fields": [
+                    {
+                      "key": "group_id",
+                      "label": "Group",
+                      "type": "Select",
+                      "placeholder": "Select group",
+                      "helpText": "Select the schedule group",
+                      "optionsSource": "groups[].group_id",
+                      "optionsSourceValueField": "group_id",
+                      "optionsSourceLabelField": "group_name",
+                      "validationRules": [
+                        {
+                          "op": "required",
+                          "message": "Group selection is required"
+                        }
+                      ]
+                    },
+                    {
+                      "key": "modbus_query_id",
+                      "label": "Query ID",
+                      "type": "Number",
+                      "placeholder": "Enter query ID",
+                      "min": 1,
+                      "validationRules": [
+                        {
+                          "op": "required",
+                          "message": "Query ID is required"
+                        }
+                      ]
+                    },
+                    {
+                      "key": "modbus_start_address",
+                      "label": "Start Address",
+                      "type": "Number",
+                      "placeholder": "Enter start address",
+                      "min": 0,
+                      "validationRules": [
+                        {
+                          "op": "required",
+                          "message": "Start address is required"
+                        },
+                        {
+                          "op": "gte",
+                          "args": [
+                            { "path": "$self" },
+                            { "literal": 0 }
+                          ],
+                          "message": "Start address must be greater than or equal to 0"
+                        }
+                      ]
+                    },
+                    {
+                      "key": "modbus_register_count",
+                      "label": "Register Count",
+                      "type": "Number",
+                      "placeholder": "Enter register count",
+                      "min": 1,
+                      "max": 125,
+                      "validationRules": [
+                        {
+                          "op": "required",
+                          "message": "Register count is required"
+                        },
+                        {
+                          "op": "gte",
+                          "args": [
+                            { "path": "$self" },
+                            { "literal": 1 }
+                          ],
+                          "message": "Register count must be at least 1"
+                        },
+                        {
+                          "op": "lte",
+                          "args": [
+                            { "path": "$self" },
+                            { "literal": 125 }
+                          ],
+                          "message": "Register count must be at most 125"
+                        }
+                      ]
+                    },
+                    {
+                      "key": "function",
+                      "label": "Function Code",
+                      "type": "Number",
+                      "placeholder": "Enter function code",
+                      "helpText": "Modbus function code (1, 2, 3, 4, 5, 6, 15, 16)",
+                      "min": 1,
+                      "max": 16,
+                      "validationRules": [
+                        {
+                          "op": "required",
+                          "message": "Function code is required"
+                        },
+                        {
+                          "op": "in",
+                          "args": [
+                            { "path": "$self" },
+                            { "literal": 1 },
+                            { "literal": 2 },
+                            { "literal": 3 },
+                            { "literal": 4 },
+                            { "literal": 5 },
+                            { "literal": 6 },
+                            { "literal": 15 },
+                            { "literal": 16 }
+                          ],
+                          "message": "Function code must be a valid Modbus function code"
+                        }
+                      ]
+                    },
+                    {
+                      "key": "plc_start_address",
+                      "label": "PLC Start Address",
+                      "type": "Number",
+                      "placeholder": "Enter PLC start address",
+                      "min": 0,
+                      "validationRules": [
+                        {
+                          "op": "required",
+                          "message": "PLC start address is required"
+                        }
+                      ]
+                    },
+                    {
+                      "key": "schedule_cron",
+                      "label": "Cron Expression",
+                      "type": "Text",
+                      "placeholder": "*/15 * * * * *",
+                      "helpText": "Cron schedule for this query",
+                      "validationRules": [
+                        {
+                          "op": "required",
+                          "message": "Cron expression is required"
+                        }
+                      ]
+                    },
+                    {
+                      "key": "registers",
+                      "label": "Registers",
+                      "type": "Array",
+                      "minItems": 1,
+                      "helpText": "List of registers to read",
+                      "itemSchema": {
+                        "key": "register",
+                        "label": "Register",
+                        "type": "Object",
+                        "fields": [
+                          {
+                            "key": "name",
+                            "label": "Register Name",
+                            "type": "Text",
+                            "placeholder": "Enter register name",
+                            "validationRules": [
+                              {
+                                "op": "required",
+                                "message": "Register name is required"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "address",
+                            "label": "Address",
+                            "type": "Number",
+                            "placeholder": "Enter address",
+                            "min": 0,
+                            "validationRules": [
+                              {
+                                "op": "required",
+                                "message": "Address is required"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "data_type",
+                            "label": "Data Type",
+                            "type": "Text",
+                            "placeholder": "Enter data type",
+                            "helpText": "e.g., float_cdab, int16, uint32",
+                            "validationRules": [
+                              {
+                                "op": "required",
+                                "message": "Data type is required"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "plc_address",
+                            "label": "PLC Address",
+                            "type": "Number",
+                            "placeholder": "Enter PLC address",
+                            "min": 0,
+                            "validationRules": [
+                              {
+                                "op": "required",
+                                "message": "PLC address is required"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "plc_data_type",
+                            "label": "PLC Data Type",
+                            "type": "Text",
+                            "placeholder": "Enter PLC data type",
+                            "helpText": "e.g., float_abcd, int16, uint32",
+                            "validationRules": [
+                              {
+                                "op": "required",
+                                "message": "PLC data type is required"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "scaling_a",
+                            "label": "Scaling A",
+                            "type": "Number",
+                            "defaultValue": 1,
+                            "helpText": "Multiplier for scaling",
+                            "validationRules": [
+                              {
+                                "op": "required",
+                                "message": "Scaling A is required"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "scaling_b",
+                            "label": "Scaling B",
+                            "type": "Number",
+                            "defaultValue": 0,
+                            "helpText": "Offset for scaling",
+                            "validationRules": [
+                              {
+                                "op": "required",
+                                "message": "Scaling B is required"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "validationRules": [
+                        {
+                          "op": "required",
+                          "message": "At least one register is required"
+                        },
+                        {
+                          "op": "unique_in",
+                          "scope": "queries[].registers[]",
+                          "args": [
+                            { "path": "address" }
+                          ],
+                          "message": "Register addresses must be unique within each query"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "validationRules": [
+                  {
+                    "op": "required",
+                    "message": "At least one query is required"
+                  }
+                ]
+              }
+            ]
+          },
+          "validationRules": [
+            {
+              "op": "required",
+              "message": "At least one Modbus device is required"
+            },
+            {
+              "op": "unique_in",
+              "scope": "modbus_devices[]",
+              "args": [
+                { "path": "modbus_slave_id" }
+              ],
+              "message": "Modbus slave IDs must be unique"
+            },
+            {
+              "op": "unique_in",
+              "scope": "modbus_devices[]",
+              "args": [
+                { "path": "device_id" }
+              ],
+              "message": "Device IDs must be unique"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

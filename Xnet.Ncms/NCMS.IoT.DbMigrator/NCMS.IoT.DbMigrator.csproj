@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>NCMS.IoT.DbMigrator</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Only needs the module that owns a DbContext — deliberately does not reference
+         Core/Infrastructure.Pki/MqttClient, since applying migrations never touches PKI or
+         MQTT. Authoring new migrations still happens against NCMS.IoT.DeviceManagement
+         directly (it has its own IDesignTimeDbContextFactory); this project only applies
+         migrations that already exist. -->
+    <ProjectReference Include="..\NCMS.Shared\NCMS.Shared.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.DeviceManagement\NCMS.IoT.DeviceManagement.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.DeviceManagement.Contracts\NCMS.IoT.DeviceManagement.Contracts.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Identity\NCMS.IoT.Identity.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

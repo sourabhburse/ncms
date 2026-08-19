@@ -1,0 +1,543 @@
+@page
+@using System.Text.Json
+@using NCMS.IoT.DeviceManagement.Contracts.Enums
+@using NCMS.IoT.Host.Models
+@using NCMS.IoT.DeviceManagement.Contracts.Permissions
+@model NCMS.IoT.Host.Pages.Configuration.ConfigTasks.IndexModel
+@{
+    ViewData["Title"] = "Config Tasks";
+    ViewData["Pretitle"] = "Configuration";
+    ViewData["Purpose"] = "Create configuration rollout tasks, assign target devices, and monitor delivery results.";
+    ViewData["HeaderIcon"] = "settings";
+}
+
+<style>
+    [x-cloak]{display:none !important;}
+    /* Select Device section appears disabled until a Config File is chosen. */
+    .select-device-box{border:1px solid rgb(220, 223, 230);border-radius:4px;padding:1rem;}
+    .select-device-disabled{opacity:.55;}
+    .select-device-disabled,.select-device-disabled *{cursor:not-allowed !important;}
+</style>
+
+<div x-data="tableController" data-table-controller>
+<!-- ── Filter bar (server-side GET; intercepted for partial updates) ──────── -->
+<form method="get" @@submit.prevent="onSubmit($event)">
+    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+    <div class="card card-sm mb-3">
+        <div class="card-body">
+            <div class="d-grid" style="grid-template-columns:minmax(0,1fr) auto;column-gap:1rem;align-items:end;">
+
+                <!-- Filters -->
+                <div class="d-flex flex-wrap gap-2 align-items-end">
+
+                    <!-- Task Number -->
+                    <div style="min-width:260px;flex:0 1 260px;">
+                        <label class="form-label small text-secondary mb-1">Task Number</label>
+                        <input type="text" name="taskNumber" value="@Model.TaskNumber"
+                               class="form-control form-control-sm" placeholder="Task number" />
+                    </div>
+
+                    <!-- Product Model -->
+                    <div style="min-width:220px;flex:0 1 220px;">
+                        <label class="form-label small text-secondary mb-1">Product Model</label>
+                        <select name="filterProductId" class="form-select form-select-sm">
+                            <option value="">All Models</option>
+                            @foreach (var p in Model.ProductOptions)
+                            {
+                                <option value="@p.Value" selected="@(Model.FilterProductId?.ToString() == p.Value)">@p.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div style="min-width:160px;flex:0 1 160px;">
+                        <label class="form-label small text-secondary mb-1">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            @foreach (var s in Enum.GetValues<ConfigureTaskStatus>())
+                            {
+                                <option value="@s" selected="@(Model.Status == s)">@s</option>
+                            }
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Search / Reset -->
+                <div class="align-self-start">
+                    <!-- Invisible label keeps the buttons aligned with the first-row inputs (not the labels). -->
+                    <label class="form-label small text-secondary mb-1" aria-hidden="true" style="visibility:hidden;">&nbsp;</label>
+                    <div class="d-flex gap-2 flex-nowrap">
+                        <button type="submit" class="btn btn-sm btn-primary text-nowrap">
+                            Search
+                        </button>
+                        <a asp-page="/Configuration/ConfigTasks/Index" class="btn btn-sm btn-outline-secondary text-nowrap">Reset</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</form>
+
+<div x-data="configTasks(@(Model.View is null ? "null" : $"'{Model.View}'"))" x-init="init()">
+
+    <!-- ── Results (swapped in place by tableController) ────────────────────── -->
+    <div id="results" @@click="onClick($event)" @@change="onChange($event)"
+         :class="{ 'opacity-50 pe-none': tableLoading }" style="transition:opacity .15s">
+        <partial name="_Results" model="Model" />
+    </div>
+
+    @* ─────────────────────────── Create wizard modal ─────────────────────────── *@
+    <template x-if="create.show">
+        <div>
+            <div class="modal modal-blur fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+                    <form method="post" asp-page-handler="Create" class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create New Config Task</h5>
+                            <button type="button" class="btn-close" @@click="closeCreate()"></button>
+                        </div>
+
+                        @* hidden submit fields populated by Alpine *@
+                        <input type="hidden" name="ProfileId" :value="profileId" />
+                        <template x-for="id in Object.keys(selected)" :key="id">
+                            <input type="hidden" name="DeviceIds" :value="id" />
+                        </template>
+
+                        <div class="modal-body">
+                            @* ── Step 1: select product + config file + devices ── *@
+                            <div x-show="create.step === 1">
+                                <div class="mb-3">
+                                    <label class="form-label required">Product Model</label>
+                                    <select class="form-select" x-model="productId" @@change="onProductChange()">
+                                        <option value="">Please select a product model</option>
+                                        @foreach (var p in Model.ProductOptions)
+                                        {
+                                            <option value="@p.Value">@p.Text</option>
+                                        }
+                                    </select>
+                                    @if (Model.ProductOptions.Count == 0)
+                                    {
+                                        <div class="form-hint text-danger">No products are flagged for configuration yet.</div>
+                                    }
+                                </div>
+
+                                <div class="mb-3 loading-region" :class="{ 'is-loading': profilesLoading }">
+                                    <label class="form-label required">Config File</label>
+                                    <select class="form-select" x-model="profileId" :disabled="!productId || profilesLoading" @@change="onProfileChange()">
+                                        <option value="">Please select a config file</option>
+                                        <template x-for="p in profiles" :key="p.id">
+                                            <option :value="p.id" x-text="p.name"></option>
+                                        </template>
+                                    </select>
+                                    <div class="form-hint" x-show="productId && !profilesLoading && profiles.length === 0">
+                                        No enabled config files for this product. Enable one on the Config Files page first.
+                                    </div>
+                                </div>
+
+                                <label class="form-label required">Select Device</label>
+                                <fieldset class="select-device-box" :disabled="!profileId" :class="{ 'select-device-disabled': !profileId }">
+                                    <div class="row g-2 mb-4">
+                                        <div class="col-md-5"><input type="text" class="form-control" placeholder="Device Name or Serial" x-model="filters.serial" @@keydown.enter.prevent="searchDevices(1)" /></div>
+                                        <div class="col-md-3">
+                                            <select class="form-select" x-model="filters.status">
+                                                <option value="">Device Status</option>
+                                                <option value="Online">Online</option>
+                                                <option value="Offline">Offline</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 d-flex gap-2">
+                                            <button type="button" class="btn btn-primary" @@click="searchDevices(1)">Search</button>
+                                            <button type="button" class="btn" @@click="resetFilters()">Reset</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive border rounded loading-region" :class="{ 'is-loading': loading }" style="min-height: 18rem; max-height: 18rem;">
+                                        <table class="table table-vcenter card-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-1"><input type="checkbox" class="form-check-input" @@change="toggleAllOnPage($event)" :checked="allOnPageSelected()" x-effect="$el.indeterminate = someOnPageSelected()" /></th>
+                                                    <th>Device Name</th><th>Product Model</th>
+                                                    <th>Current Version</th><th>Device Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-if="!loading && visibleDevices.length === 0">
+                                                    <tr><td colspan="5" class="text-secondary text-center py-5">No Data</td></tr>
+                                                </template>
+                                                <template x-for="d in visibleDevices" :key="d.deviceId">
+                                                    <tr>
+                                                        <td><input type="checkbox" class="form-check-input" :checked="!!selected[d.deviceId]" @@change="toggleDevice(d)" /></td>
+                                                        <td x-text="d.deviceName || '—'"></td>
+                                                        <td x-text="d.productModel || '—'"></td>
+                                                        <td class="text-truncate" style="max-width: 12rem;" x-text="d.currentFirmwareVersion || '—'"></td>
+                                                        <td><span class="badge" :class="d.deviceStatus === 'Online' ? 'bg-green-lt' : 'bg-red-lt'" x-text="d.deviceStatus || '—'"></span></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <partial name="_ModalDevicePager" />
+                                </fieldset>
+                            </div>
+
+                            @* ── Step 2: review + duration ── *@
+                            <div x-show="create.step === 2">
+                                <dl class="row">
+                                    <dt class="col-sm-3 text-end">Config File:</dt><dd class="col-sm-9" x-text="selectedProfile?.name"></dd>
+                                    <dt class="col-sm-3 text-end">Product Model:</dt><dd class="col-sm-9" x-text="selectedProductName()"></dd>
+                                    <dt class="col-sm-3 text-end">Target Device Count:</dt><dd class="col-sm-9"><span x-text="Object.keys(selected).length"></span> Unit</dd>
+                                </dl>
+                                <div class="table-responsive border rounded mb-3" style="max-height: 22rem;">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr><th>Index</th><th>Device Name</th><th>Product Model</th><th>Current Version</th><th>Device Status</th><th>Action</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="(d, idx) in selectedList" :key="d.deviceId">
+                                                <tr>
+                                                    <td x-text="idx + 1"></td>
+                                                    <td x-text="d.deviceName || '—'"></td>
+                                                    <td x-text="d.productModel || '—'"></td>
+                                                    <td class="text-truncate" style="max-width: 12rem;" x-text="d.currentFirmwareVersion || '—'"></td>
+                                                    <td><span class="badge" :class="d.deviceStatus === 'Online' ? 'bg-green-lt' : 'bg-red-lt'" x-text="d.deviceStatus || '—'"></span></td>
+                                                    <td><button type="button" class="btn btn-link text-red p-0" @@click="removeSelected(d.deviceId)">Delete</button></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required">Upgrade Interval</label>
+                                    <div class="input-group" style="max-width: 14rem;">
+                                        <button type="button" class="btn" @@click="duration = Math.max(0.1, (parseFloat(duration)||0) - 0.1).toFixed(1)">−</button>
+                                        <input type="number" step="0.1" min="0.1" class="form-control text-center" name="Duration" x-model="duration" />
+                                        <span class="input-group-text">H</span>
+                                        <button type="button" class="btn" @@click="duration = ((parseFloat(duration)||0) + 0.1).toFixed(1)">+</button>
+                                    </div>
+                                    <div class="form-hint">The configuration command expires after this duration if the device does not respond.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn" @@click="closeCreate()">Close</button>
+                            <button type="button" class="btn" x-show="create.step === 2" @@click="create.step = 1">Previous Step</button>
+                            <button type="button" class="btn btn-primary" x-show="create.step === 1"
+                                    :disabled="!profileId || Object.keys(selected).length === 0" @@click="goNext()">Next Step</button>
+                            <button type="submit" class="btn btn-primary" x-show="create.step === 2">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        </div>
+    </template>
+
+    @* ───────────────── Details modal (read-only monitoring) ───────────────── *@
+    <template x-if="detail.show">
+        <div>
+            <div class="modal modal-blur fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">View Config Task Details</h5>
+                            <button type="button" class="btn-close" @@click="detail.show = false"></button>
+                        </div>
+                        <div class="modal-body">
+                            <template x-if="!detail.data && !detail.error">
+                                <div class="loading-region is-loading" style="min-height:8rem"></div>
+                            </template>
+                            <template x-if="detail.error">
+                                <div class="alert alert-danger m-3" x-text="detail.error"></div>
+                            </template>
+                            <template x-if="detail.data">
+                                <div>
+                                    @* ── Task summary header ── *@
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-8">
+                                            <div class="text-secondary small">Task Number</div>
+                                            <div class="fw-bold font-monospace text-truncate" x-text="detail.data.taskNumber"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-secondary small">Status</div>
+                                            <span class="badge" :class="taskBadge(detail.data.taskStatus)" x-text="detail.data.taskStatus"></span>
+                                        </div>
+                                        <div class="col-md-4"><div class="text-secondary small">Target Devices</div><div x-text="detail.data.deviceTotal + ' devices'"></div></div>
+                                        <div class="col-md-4"><div class="text-secondary small">Product Model</div><div x-text="detail.data.productModel || '—'"></div></div>
+                                        <div class="col-md-4"><div class="text-secondary small">Upgrade Interval</div><div x-text="detail.data.configDurationHours + ' H'"></div></div>
+                                        <div class="col-md-9"><div class="text-secondary small">Config File</div><div class="text-truncate" x-text="detail.data.profileName"></div></div>
+                                        <div class="col-md-3"><div class="text-secondary small">Created By</div><div x-text="detail.data.createdBy || '—'"></div></div>
+                                    </div>
+
+                                    @* ── Progress: donut + legend ── *@
+                                    <div class="card mb-3">
+                                        <div class="card-header">
+                                            @* <h3 class="card-title">Config progress</h3> *@
+                                            <div class="card-actions"><span class="badge bg-blue-lt" x-text="donePct() + '% complete'"></span></div>
+                                        </div>
+                                        <div class="card-body">
+                                            <partial name="_TaskProgressDonut" />
+                                        </div>
+                                    </div>
+
+                                    @* ── Device-level results ── *@
+                                    <div class="card">
+                                        @* <div class="card-header"><h3 class="card-title">Device results</h3></div> *@
+                                        <div class="table-responsive">
+                                            <table class="table table-vcenter card-table mb-0">
+                                                <thead>
+                                                    <tr><th>Index</th><th>Device Name</th><th>Product Model</th><th>State</th><th>Attempts</th><th>Completed At</th><th>Failure Reason</th><th class="text-center">Action</th></tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template x-if="detail.data.devices.length === 0">
+                                                        <tr><td colspan="8" class="text-secondary text-center py-4">No devices.</td></tr>
+                                                    </template>
+                                                    <template x-for="d in detail.data.devices" :key="d.deviceId">
+                                                        <tr>
+                                                            <td x-text="d.index"></td>
+                                                            <td x-text="d.deviceName"></td>
+                                                            <td x-text="d.productModel || '—'"></td>
+                                                            <td><span class="badge" :class="stateClass(d.configState)" x-text="stateLabel(d.configState)"></span></td>
+                                                            <td x-text="d.attemptCount"></td>
+                                                            <td class="text-nowrap" x-text="d.completedAt ? fmt(d.completedAt) : '—'"></td>
+                                                            <td class="text-red text-truncate" style="max-width: 16rem;" :title="d.failureReason" x-text="d.failureReason || '—'"></td>
+                                                            <td class="text-center text-nowrap">
+                                                                <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                                                                        asp-permission="@DeviceManagementPermissions.ConfigTasks.Abort"
+                                                                        x-show="d.configState === 'WaitingToConfig'"
+                                                                        @@click="abortDevice(d.deviceId)">Abort the Config</button>
+                                                                <span class="text-secondary" x-show="d.configState !== 'WaitingToConfig'"
+                                                                      title="Only devices waiting to config can be aborted">—</span>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="card-footer">
+                                            <partial name="_ModalDetailPager" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-danger"
+                                    asp-permission="@DeviceManagementPermissions.ConfigTasks.Terminate"
+                                    x-show="detail.data && (detail.data.taskStatus === 'NotStarted' || detail.data.taskStatus === 'InProgress')"
+                                    @@click="abortTask()">Abort Task</button>
+                            <button type="button" class="btn" @@click="detail.show = false">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        </div>
+    </template>
+</div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        function configTasks(autoView) {
+            return {
+                productId: '',
+                profiles: [],
+                profileId: '',
+                filters: { serial: '', status: '' },
+                deviceResults: [], deviceTotal: 0, devicePage: 1, devicePageSize: 25, loading: false,
+                profilesLoading: false,
+                selected: {},          // deviceId -> device object
+                duration: '1.0',
+                create: { show: false, step: 1 },
+                detail: { show: false, data: null },
+                detailId: '', detailPage: 1, detailPageSize: 25, detailTotal: 0,
+
+                init() {
+                    if (autoView) this.openDetail(autoView);
+                },
+                get selectedProfile() { return this.profiles.find(p => p.id === this.profileId) || null; },
+                get selectedList() { return Object.values(this.selected); },
+                // Server already applied every filter (incl. status); the client only renders.
+                get visibleDevices() { return this.deviceResults; },
+                detailPages() { return Math.max(1, Math.ceil(this.detailTotal / this.detailPageSize)); },
+                selectedProductName() {
+                    const d = this.selectedList[0];
+                    return d ? (d.productModel || '—') : '—';
+                },
+
+                openCreate() {
+                    this.create = { show: true, step: 1 };
+                    this.productId = ''; this.profiles = []; this.profileId = '';
+                    this.selected = {}; this.deviceResults = [];
+                    this.deviceTotal = 0; this.devicePage = 1;
+                    this.filters = { serial: '', status: '' };
+                    this.duration = '1.0';
+                },
+                closeCreate() { this.create.show = false; },
+                async onProductChange() {
+                    this.profileId = ''; this.profiles = [];
+                    this.selected = {}; this.deviceResults = []; this.deviceTotal = 0;
+                    if (!this.productId) return;
+                    this.profilesLoading = true;
+                    try {
+                        const res = await fetch(window.location.pathname + '?handler=Profiles&productId=' + encodeURIComponent(this.productId),
+                            { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                        this.profiles = res.ok ? await res.json() : [];
+                    } finally { this.profilesLoading = false; }
+                },
+                onProfileChange() {
+                    this.selected = {};
+                    this.searchDevices(1);
+                },
+                resetFilters() { this.filters = { serial: '', status: '' }; this.searchDevices(1); },
+                async searchDevices(page) {
+                    if (!this.profileId) { this.deviceResults = []; this.deviceTotal = 0; return; }
+                    this.loading = true; this.devicePage = page;
+                    const q = new URLSearchParams({
+                        handler: 'Devices', productId: this.productId,
+                        serialNumber: this.filters.serial || '',
+                        status: this.filters.status || '', page: page, pageSize: this.devicePageSize
+                    });
+                    try {
+                        const res = await fetch(window.location.pathname + '?' + q.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                        if (res.ok) { const d = await res.json(); this.deviceResults = d.items; this.deviceTotal = d.total; }
+                        else { this.deviceResults = []; this.deviceTotal = 0; }
+                    } finally { this.loading = false; }
+                },
+                setDevicePageSize(size) { this.devicePageSize = parseInt(size, 10) || 25; this.searchDevices(1); },
+                devicePages() { return Math.max(1, Math.ceil(this.deviceTotal / this.devicePageSize)); },
+                toggleDevice(d) {
+                    if (this.selected[d.deviceId]) delete this.selected[d.deviceId];
+                    else this.selected[d.deviceId] = d;
+                },
+                removeSelected(id) { delete this.selected[id]; },
+                allOnPageSelected() {
+                    return this.visibleDevices.length > 0 && this.visibleDevices.every(d => this.selected[d.deviceId]);
+                },
+                someOnPageSelected() {
+                    return Object.keys(this.selected).length > 0 && !this.allOnPageSelected();
+                },
+                toggleAllOnPage(e) {
+                    if (e.target.checked) this.visibleDevices.forEach(d => this.selected[d.deviceId] = d);
+                    else this.visibleDevices.forEach(d => delete this.selected[d.deviceId]);
+                },
+                goNext() {
+                    if (!this.profileId || Object.keys(this.selected).length === 0) return;
+                    this.create.step = 2;
+                },
+                openDetail(id) {
+                    this.detail = { show: true, data: null, error: null };
+                    this.detailId = id; this.detailTotal = 0;
+                    return this.loadDetailPage(1);
+                },
+                // Server-side page load — fetches only the requested page of assigned devices.
+                async loadDetailPage(page) {
+                    if (page < 1) return;
+                    try {
+                        const res = await fetch(window.location.pathname + '?handler=Detail&id=' + encodeURIComponent(this.detailId)
+                            + '&page=' + page + '&pageSize=' + this.detailPageSize,
+                            { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                        const text = await res.text();
+                        let body = null;
+                        try { body = JSON.parse(text); } catch { /* not JSON */ }
+                        if (body && body.error) { this.detail.error = body.error; return; }
+                        if (!res.ok || body === null) {
+                            this.detail.error = 'Could not load task details (HTTP ' + res.status + '). '
+                                + 'If this persists, stop the app, rebuild, and restart so the latest handlers are loaded.';
+                            console.error('Config task detail response:', res.status, text.slice(0, 500));
+                            return;
+                        }
+                        this.detail.data = body;
+                        this.detailTotal = body.deviceTotal;
+                        this.detailPage = page;
+                    } catch (e) {
+                        this.detail.error = 'Network error loading task details: ' + e.message;
+                    }
+                },
+                setDetailPageSize(size) { this.detailPageSize = parseInt(size, 10) || 25; this.loadDetailPage(1); },
+                async abortDevice(deviceId) {
+                    if (!this.detail.data) return;
+                    const taskId = this.detail.data.id;
+                    const ok = await this.postAbort(window.location.pathname + '?handler=AbortDevice&id=' + encodeURIComponent(taskId)
+                        + '&deviceId=' + encodeURIComponent(deviceId));
+                    if (ok) toastr.success('Device config aborted.');
+                    await this.loadDetailPage(this.detailPage);
+                },
+                async abortTask() {
+                    if (!this.detail.data) return;
+                    const taskId = this.detail.data.id;
+                    const ok = await this.postAbort(window.location.pathname + '?handler=AbortTask&id=' + encodeURIComponent(taskId));
+                    if (ok) toastr.success('Task aborted.');
+                    await this.loadDetailPage(this.detailPage);
+                },
+                async postAbort(url) {
+                    try {
+                        const body = new URLSearchParams();
+                        body.set('__RequestVerificationToken', this.token());
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: body.toString()
+                        });
+                        if (!res.ok) {
+                            let msg = 'Abort failed (HTTP ' + res.status + ').';
+                            try { const b = await res.json(); if (b && b.error) msg = b.error; } catch { /* ignore */ }
+                            toastr.error(msg);
+                            return false;
+                        }
+                        return true;
+                    } catch (e) {
+                        toastr.error('Network error: ' + e.message);
+                        return false;
+                    }
+                },
+                token() {
+                    const el = document.querySelector('input[name="__RequestVerificationToken"]');
+                    return el ? el.value : '';
+                },
+                fmt(s) { return s ? new Date(s).toLocaleString() : '—'; },
+                barPct(n) { const t = this.detail.data?.progress?.total || 0; return t ? (n / t * 100) : 0; },
+                donePct() { const p = this.detail.data?.progress; return p && p.total ? Math.round(p.complete / p.total * 100) : 0; },
+                donutSegments() {
+                    // Config's device lifecycle has four states — failures and timeouts both
+                    // collapse into "Terminated", so this legend has no separate Failed/Timed-out rows.
+                    const p = this.detail.data?.progress || {};
+                    const total = p.total || 0;
+                    const defs = [
+                        { label: 'Succeeded',   color: '#2fb344', count: p.complete    || 0 },
+                        { label: 'In progress', color: '#206bc4', count: p.inProgress  || 0 },
+                        { label: 'Pending',     color: '#f59f00', count: p.notStarted  || 0 },
+                        { label: 'Terminated',  color: '#adb5bd', count: p.terminated  || 0 },
+                    ];
+                    let before = 0;
+                    return defs.map(d => {
+                        const pct = total ? (d.count / total * 100) : 0;
+                        const seg = { ...d, pct, pctLabel: Math.round(pct), dashoffset: 25 - before };
+                        before += pct;
+                        return seg;
+                    });
+                },
+                taskBadge(status) { return ({
+                    NotStarted: 'bg-secondary-lt', InProgress: 'bg-blue-lt',
+                    Completed: 'bg-green-lt', Cancelled: 'bg-red-lt'
+                })[status] || 'bg-secondary-lt'; },
+                stateLabel(state) { return ({
+                    WaitingToConfig: 'Waiting to Config', Configuring: 'Configuring',
+                    ConfigSucceeded: 'Config Succeeded', Terminated: 'Terminated'
+                })[state] || state; },
+                stateClass(state) { return ({
+                    WaitingToConfig: 'bg-orange-lt', Configuring: 'bg-blue-lt',
+                    ConfigSucceeded: 'bg-green-lt', Terminated: 'bg-secondary-lt'
+                })[state] || 'bg-secondary-lt'; },
+            };
+        }
+    </script>
+}

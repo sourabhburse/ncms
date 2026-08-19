@@ -1,0 +1,101 @@
+@model NCMS.IoT.Host.Pages.Configuration.Profiles.IndexModel
+@using NCMS.IoT.DeviceManagement.Contracts.Enums
+@using NCMS.IoT.DeviceManagement.Contracts.Permissions
+@*
+    Results region for Config Files — swapped in by tableController. Row action buttons
+    (@click) bind to the page's `profileIndex` component; Alpine re-initialises after each swap.
+*@
+@{
+    SortHeaderVm Sortable(string key, string label) => new()
+    {
+        Key = key,
+        Label = label,
+        CurrentSort = Model.Sort,
+        PageName = "/Configuration/Profiles/Index",
+        RouteValues = Model.FilterRouteValues()
+    };
+}
+<div class="card">
+    <div class="card-body">
+        <div class="btn-list">
+            <button type="button" class="btn btn-primary" asp-permission="@DeviceManagementPermissions.ConfigProfiles.Add" @@click="openCreate()">
+                <i class="ti ti-plus me-1"></i>New Config File
+            </button>
+        </div>
+    </div>
+    <div id="advanced-table">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table table-hover">
+                <thead>
+                    <tr>
+                        <th class="w-1">#</th>
+                        <th><partial name="_SortHeader" model='Sortable("profileName", "Profile Name")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("product", "Product Model")' /></th>
+                        <th>Remark</th>
+                        <th><partial name="_SortHeader" model='Sortable("status", "File Status")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("uploaded", "File Upload Time")' /></th>
+                        <th class="text-center col-actions">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="table-tbody">
+                    @{ var idx = (Model.Result.PageNumber - 1) * Model.Result.PageSize; }
+                    @foreach (var p in Model.Profiles)
+                    {
+                        idx++;
+                        var isEnabled = p.Status == ProfileStatus.Enable;
+                        <tr>
+                            <td class="text-secondary">@idx</td>
+                            <td>
+                                <a href="#" class="text-reset fw-medium" @@click.prevent="openDetail('@p.Id')">@p.ProfileName</a>
+                            </td>
+                            <td><span class="text-secondary">@Format.OrDash(p.ProductModel)</span></td>
+                            <td><span class="text-secondary">@Format.OrDash(p.Remark)</span></td>
+                            <td>
+                                <span class="badge bg-@(isEnabled ? "green" : "secondary")-lt">
+                                    @(isEnabled ? "Enable" : "Disable")
+                                </span>
+                            </td>
+                            <td class="text-nowrap">@p.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-center text-nowrap col-actions">
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <button type="button" class="btn btn-link btn-sm p-1 text-primary"
+                                            asp-permission="@DeviceManagementPermissions.ConfigProfiles.View"
+                                            @@click="openDetail('@p.Id')">View</button>
+                                    <form method="post" asp-page-handler="Toggle" class="d-inline" asp-permission="@DeviceManagementPermissions.ConfigProfiles.EnableDisable">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <input type="hidden" name="enable" value="@((!isEnabled).ToString().ToLowerInvariant())" />
+                                        <button type="submit" class="btn btn-link btn-sm p-1 @(isEnabled ? "text-warning" : "text-success")">
+                                            @(isEnabled ? "Disable" : "Enable")
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-link btn-sm p-1 text-secondary" disabled="@isEnabled"
+                                            asp-permission="@DeviceManagementPermissions.ConfigProfiles.Edit"
+                                            @@click="openEdit('@p.Id')">Edit</button>
+                                    <form method="post" asp-page-handler="Copy" class="d-inline" asp-permission="@DeviceManagementPermissions.ConfigProfiles.Copy">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <button type="submit" class="btn btn-link btn-sm p-1 text-secondary">Copy</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="Delete" class="d-inline" asp-permission="@DeviceManagementPermissions.ConfigProfiles.Delete">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <button type="button" class="btn btn-link btn-sm p-1 text-danger" disabled="@isEnabled"
+                                                data-item-name="@p.ProfileName"
+                                                @@click="confirmAction('', 'Do you want to delete the Configuration Profile?', () => $el.closest('form').requestSubmit(), { itemName: $el.dataset.itemName })">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Profiles.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-secondary py-4">
+                                No config files yet. Click <strong>New Config File</strong> to create the first one.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <partial name="_Pager" model="Model.Pager" />
+</div>

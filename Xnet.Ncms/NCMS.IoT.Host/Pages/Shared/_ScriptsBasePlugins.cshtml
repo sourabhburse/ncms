@@ -1,0 +1,13 @@
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/toastr/toastr.min.js"></script>
+<script defer src="~/lib/alpinejs/alpine.min.js"></script>
+@*
+    Bootstrap JS is provided by tabler.min.js (it bundles Bootstrap and exposes
+    window.bootstrap). We do NOT also load bootstrap.bundle.min.js — having both
+    double-binds the collapse/dropdown data-API (the navbar toggle fired twice →
+    opened then instantly closed). tabler.min.js alone powers modals, dropdowns,
+    and the navbar collapse.
+*@
+<script defer src="~/lib/tabler/tabler.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<script src="~/js/nav.js"></script>

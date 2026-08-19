@@ -1,0 +1,11 @@
+@model NCMS.IoT.Host.Models.SortHeaderVm
+@*
+    Server-side sortable column header. Renders Tabler's `table-sort` button styling but as an
+    anchor that round-trips with an updated sort key (asc/desc toggle), preserving active
+    filters. The `.asc`/`.desc` classes drive Tabler's direction chevron on the active column.
+*@
+<a asp-page="@Model.PageName"
+   asp-all-route-data="Model.RouteForToggle()"
+   class="table-sort text-reset text-decoration-none @Model.DirectionClass">
+    @Model.Label
+</a>

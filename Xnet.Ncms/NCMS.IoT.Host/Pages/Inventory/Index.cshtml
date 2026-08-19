@@ -1,0 +1,333 @@
+@page
+@using NCMS.IoT.DeviceManagement.Contracts.Permissions
+@using NCMS.IoT.Identity.Contracts.Services
+@model NCMS.IoT.Host.Pages.Inventory.IndexModel
+@inject ICurrentUser CurrentUser
+@{
+    ViewData["Title"] = "Hardware Inventory";
+    ViewData["Pretitle"] = "Provisioning";
+    ViewData["Purpose"] = "Register hardware entries, keep product mappings current, and prepare devices for provisioning workflows.";
+    ViewData["HeaderIcon"] = "cpu";
+
+    var canAdd = CurrentUser.HasPermission(DeviceManagementPermissions.Inventory.Add);
+    var canUpload = CurrentUser.HasPermission(DeviceManagementPermissions.Inventory.Upload);
+    // The Create tab is the default-active one only when it's actually available.
+    var createTabActive = canAdd || !canUpload;
+}
+
+<div x-data="tableController" data-table-controller>
+<div x-data="hwInventory()">
+
+    <!-- ── Filter bar (server-side GET; intercepted for partial updates) ──── -->
+    <form method="get" @@submit.prevent="onSubmit($event)">
+        @* Page size lives in the pager; carry it through search submits. *@
+        <input type="hidden" name="pageSize" value="@Model.PageSize" />
+        <div class="card card-sm mb-3">
+            <div class="card-body">
+                <div class="d-grid" style="grid-template-columns:minmax(0,1fr) auto;column-gap:1rem;align-items:end;">
+
+                    <!-- Filters -->
+                    <div class="d-flex flex-wrap gap-2 align-items-end">
+
+                        <!-- Search -->
+                        <div style="min-width:260px;flex:0 1 260px;">
+                            <label class="form-label small text-secondary mb-1">Search</label>
+                            <input type="text" name="search" value="@Model.Search"
+                                   class="form-control form-control-sm"
+                                   placeholder="Serial, product, status or policy" />
+                        </div>
+
+                        <!-- Product -->
+                        <div style="min-width:420px;flex:1 1 420px;">
+                            <label class="form-label small text-secondary mb-1">Product</label>
+                            @{
+                                var productFilterVm = new ProductFilterVm
+                                {
+                                    Options = Model.FilterOptions,
+                                    CategoryId = Model.CategoryId,
+                                    TypeId = Model.TypeId,
+                                    ProductId = Model.ProductId
+                                };
+                            }
+                            <partial name="_ProductFilters" model="productFilterVm" />
+                        </div>
+
+                    </div>
+
+                    <!-- Search / Reset -->
+                    <div class="align-self-start">
+                        <!-- Invisible label keeps the buttons aligned with the first-row inputs (not the labels). -->
+                        <label class="form-label small text-secondary mb-1" aria-hidden="true" style="visibility:hidden;">&nbsp;</label>
+                        <div class="d-flex gap-2 flex-nowrap">
+                            <button type="submit" class="btn btn-sm btn-primary text-nowrap">
+                                Search
+                            </button>
+                            <a asp-page="/Inventory/Index" class="btn btn-sm btn-outline-secondary text-nowrap">Reset</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- ── Results (swapped in place by tableController) ────────────────────── -->
+    <div id="results" @@click="onClick($event)" @@change="onChange($event)"
+         :class="{ 'opacity-50 pe-none': tableLoading }" style="transition:opacity .15s">
+        <partial name="_Results" model="Model" />
+    </div>
+
+    <!-- ── Add modal (Create + Import tabs) ─────────────────────────────── -->
+    <div class="modal modal-blur fade" id="modal-add" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Hardware</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <ul class="nav nav-underline px-3 pt-2" role="tablist">
+                    <li class="nav-item" asp-permission="@DeviceManagementPermissions.Inventory.Add">
+                        <button class="nav-link @(createTabActive ? "active" : "")" data-bs-toggle="tab"
+                                data-bs-target="#tab-create" type="button">Create Device</button>
+                    </li>
+                    <li class="nav-item" asp-permission="@DeviceManagementPermissions.Inventory.Upload">
+                        <button class="nav-link @(createTabActive ? "" : "active")" data-bs-toggle="tab"
+                                data-bs-target="#tab-import" type="button">Import CSV</button>
+                    </li>
+                </ul>
+                <div class="tab-content">
+
+                    <!-- Create tab -->
+                    <div class="tab-pane fade @(createTabActive ? "show active" : "")" id="tab-create" asp-permission="@DeviceManagementPermissions.Inventory.Add">
+                        <form method="post" asp-page-handler="Create">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label required">Product</label>
+                                    <select name="ProductId" class="form-select" required>
+                                        <option value="">- select a product -</option>
+                                        @foreach (var p in Model.ProductOptions)
+                                        {
+                                            <option value="@p.Value">@p.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required">Serial Number</label>
+                                    <input name="SerialNumber" class="form-control" maxlength="128"
+                                           required placeholder="e.g. SN2025001234" autocomplete="off" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required">Identity Policy</label>
+                                    <input name="IdentityPolicy" class="form-control"
+                                           value="serial_only" placeholder="e.g. serial_only, x509" />
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Identity Claims</label>
+                                    <div class="form-text mb-2">Optional. Add `base_mac` here if you want MAC-based identity validation.</div>
+                                    <template x-for="(entry, i) in addClaims" :key="i">
+                                        <div class="d-flex gap-2 mb-2">
+                                            <input class="form-control" style="max-width:160px"
+                                                   placeholder="Claim key" x-model="entry.key" />
+                                            <input class="form-control" placeholder="Value"
+                                                   x-model="entry.value" />
+                                            <button type="button" class="btn btn-icon btn-outline-danger"
+                                                    :disabled="addClaims.length === 1"
+                                                    @@click="addClaims.splice(i,1)">&times;</button>
+                                        </div>
+                                    </template>
+                                    <button type="button" class="btn btn-link p-0"
+                                            @@click="addClaims.push({key:'',value:''})">+ Add Claim</button>
+                                </div>
+                                <input type="hidden" name="ClaimsJson"
+                                       :value="JSON.stringify(addClaims.filter(c => c.key.trim() !== ''))" />
+                            </div>
+                            <div class="modal-footer justify-content-center">
+                                <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Confirm</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Import tab -->
+                    <div class="tab-pane fade @(createTabActive ? "" : "show active")" id="tab-import" asp-permission="@DeviceManagementPermissions.Inventory.Upload">
+                        <form method="post" asp-page-handler="Import" enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label required">Product</label>
+                                    <select name="productId" class="form-select" required x-model="importProductId">
+                                        <option value="">- select a product -</option>
+                                        @foreach (var p in Model.ProductOptions)
+                                        {
+                                            <option value="@p.Value">@p.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                                <a class="btn btn-outline-primary mb-3"
+                                   :class="!importProductId && 'disabled'"
+                                   :href="importProductId ? '?handler=Template&productId=' + importProductId : '#'"
+                                   asp-permission="@DeviceManagementPermissions.Inventory.Download">
+                                    <icon name="download" class="me-1" />Download Template
+                                </a>
+                                <label class="upload-dropzone">
+                                    <icon name="cloud-upload" size="48" class="text-secondary mb-2" />
+                                    <div>Click or drag files here to upload</div>
+                                    <small>Supported Extensions: .csv</small>
+                                    <span class="fw-medium text-primary mt-2"
+                                          x-show="importFileName" x-text="importFileName"></span>
+                                    <input type="file" name="file" accept=".csv" required
+                                           @@change="importFileName = $event.target.files[0]?.name || ''" />
+                                </label>
+                            </div>
+                            <div class="modal-footer justify-content-center">
+                                <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary"
+                                        :disabled="!importProductId">Confirm</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Edit modal ───────────────────────────────────────────────────── -->
+    <div class="modal modal-blur fade" id="modal-edit" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <form class="modal-content" method="post" asp-page-handler="Edit">
+                <input type="hidden" name="Id" x-model="edit.id" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Hardware Entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label required">Product</label>
+                        <select name="ProductId" class="form-select" required x-model="edit.productId">
+                            <option value="">- select a product -</option>
+                            @foreach (var p in Model.ProductOptions)
+                            {
+                                <option value="@p.Value">@p.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Serial Number</label>
+                        <input name="SerialNumber" class="form-control" maxlength="128"
+                               required autocomplete="off" x-model="edit.serial" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Identity Policy</label>
+                        <input name="IdentityPolicy" class="form-control" required x-model="edit.policy"
+                               placeholder="e.g. serial_only, x509" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Identity Claims</label>
+                        <div class="form-text mb-2">Optional. Add `base_mac` here if you want MAC-based identity validation.</div>
+                        <template x-for="(entry, i) in editClaims" :key="i">
+                            <div class="d-flex gap-2 mb-2">
+                                <input class="form-control" style="max-width:160px"
+                                       placeholder="Claim key" x-model="entry.key" />
+                                <input class="form-control" placeholder="Value" x-model="entry.value" />
+                                <button type="button" class="btn btn-icon btn-outline-danger"
+                                        :disabled="editClaims.length === 1"
+                                        @@click="editClaims.splice(i,1)">&times;</button>
+                            </div>
+                        </template>
+                        <button type="button" class="btn btn-link p-0"
+                                @@click="editClaims.push({key:'',value:''})">+ Add Claim</button>
+                    </div>
+                    <input type="hidden" name="ClaimsJson"
+                           :value="JSON.stringify(editClaims.filter(c => c.key.trim() !== ''))" />
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Delete form (hidden; submitted after confirmAction() approves) ─── -->
+    <form method="post" asp-page-handler="Delete" x-ref="deleteForm" class="d-none">
+        <input type="hidden" name="id" x-model="del.id" />
+    </form>
+
+    <!-- ── Batch delete modal ────────────────────────────────────────────── -->
+    <div class="modal modal-blur fade" id="modal-batch-delete" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <form class="modal-content" method="post" asp-page-handler="BatchDelete">
+                <input type="hidden" name="idsJson" :value="JSON.stringify(selectedIds)" />
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <h3>Confirm Batch Delete</h3>
+                    <div class="text-secondary" x-text="batchMessage()"></div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+<script>
+    function hwInventory() {
+        return {
+            selectedIds: [],
+            addClaims: [{ key: "", value: "" }],
+            editClaims: [{ key: "", value: "" }],
+            edit: { id: "", productId: "", serial: "", policy: "" },
+            del: { id: "", serial: "" },
+            importProductId: "",
+            importFileName: "",
+
+            // The current page's checkbox ids, read from the live DOM so it stays correct
+            // after the results are swapped in via the tableController (no stale ALL_IDS).
+            pageIds() {
+                return Array.from(document.querySelectorAll('#results tbody input.form-check-input[value]'))
+                    .map(c => c.value);
+            },
+            get allSelected() {
+                const ids = this.pageIds();
+                return ids.length > 0 && ids.every(id => this.selectedIds.includes(id));
+            },
+            toggleAll(e) {
+                const ids = this.pageIds();
+                if (e.target.checked) {
+                    ids.forEach(id => { if (!this.selectedIds.includes(id)) this.selectedIds.push(id); });
+                } else {
+                    this.selectedIds = this.selectedIds.filter(id => !ids.includes(id));
+                }
+            },
+            resetAdd() {
+                this.addClaims = [{ key: "", value: "" }];
+                this.importProductId = "";
+                this.importFileName = "";
+            },
+            openEdit(el) {
+                const d = el.dataset;
+                this.edit = { id: d.id, productId: d.productId, serial: d.serial, policy: d.policy };
+                const claims = JSON.parse(d.claims || "[]");
+                this.editClaims = claims.length ? claims : [{ key: "", value: "" }];
+            },
+            openDelete(el) {
+                const d = el.dataset;
+                this.del = { id: d.id, serial: d.serial };
+                confirmAction('', 'Do you want to delete the Hardware?',
+                    () => this.$nextTick(() => this.$refs.deleteForm.requestSubmit()),
+                    { itemName: d.serial });
+            },
+            openBatchDelete() {
+                if (this.selectedIds.length === 0) return;
+            },
+            batchMessage() {
+                const n = this.selectedIds.length;
+                return `Delete ${n} selected ${n === 1 ? "entry" : "entries"}? This cannot be undone.`;
+            }
+        };
+    }
+</script>
+}

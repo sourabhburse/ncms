@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>NCMS.IoT.MqttClient</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BouncyCastle: used by BackendCertificateBootstrapper for key generation and CSR creation -->
+    <PackageReference Include="BouncyCastle.Cryptography" />
+    <!-- MQTTnet targets netstandard2.0; compatible with all .NET versions -->
+    <PackageReference Include="MQTTnet" />
+    <PackageReference Include="MQTTnet.Extensions.ManagedClient" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NCMS.IoT.Core\NCMS.IoT.Core.csproj" />
+  </ItemGroup>
+
+</Project>

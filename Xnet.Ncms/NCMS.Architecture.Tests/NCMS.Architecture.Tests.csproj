@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>NCMS.Architecture.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- One ProjectReference per assembly these tests need to inspect via reflection —
+         this project participates in the solution's build graph but not its runtime
+         dependency graph (nothing depends on Architecture.Tests). -->
+    <ProjectReference Include="..\NCMS.Shared\NCMS.Shared.csproj" />
+    <ProjectReference Include="..\NCMS.Persistence\NCMS.Persistence.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Core\NCMS.IoT.Core.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Infrastructure.Pki\NCMS.IoT.Infrastructure.Pki.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.MqttClient\NCMS.IoT.MqttClient.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.DeviceManagement.Contracts\NCMS.IoT.DeviceManagement.Contracts.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.DeviceManagement\NCMS.IoT.DeviceManagement.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Identity.Contracts\NCMS.IoT.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Identity\NCMS.IoT.Identity.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Api\NCMS.IoT.Api.csproj" />
+    <ProjectReference Include="..\NCMS.IoT.Host\NCMS.IoT.Host.csproj" />
+  </ItemGroup>
+
+</Project>

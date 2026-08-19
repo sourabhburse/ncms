@@ -1,0 +1,39 @@
+@using System.Text.Json
+@model NCMS.IoT.Host.Pages.Devices.DetailsModel
+@{
+    var telemetryRows = Model.Telemetry.Select(t => new { ts = t.Timestamp, payload = t.PayloadJson });
+    var startIndex = (Model.PageNumber - 1) * Model.PageSize;
+}
+
+@* JSON island — read by Alpine in init(); avoids embedding quotes in x-data. *@
+<script type="application/json" id="device-telemetry-json">@Html.Raw(JsonSerializer.Serialize(telemetryRows))</script>
+<div class="table-responsive"
+     x-data="telemetryTable('device-telemetry-json', @startIndex)" x-init="init()">
+    <table class="table table-vcenter card-table text-nowrap">
+        <thead>
+            <tr>
+                <th class="w-1">#</th>
+                <th>Timestamp</th>
+                <template x-for="c in columns" :key="c">
+                    <th x-text="label(c)"></th>
+                </template>
+            </tr>
+        </thead>
+        <tbody>
+            <template x-if="rows.length === 0">
+                <tr><td colspan="99" class="text-center text-secondary py-4">No telemetry data</td></tr>
+            </template>
+            <template x-for="(r, i) in rows" :key="i">
+                <tr>
+                    <td class="text-secondary" x-text="startIndex + i + 1"></td>
+                    <td><span class="font-monospace" x-text="fmtTs(r.ts)"></span></td>
+                    <template x-for="c in columns" :key="c">
+                        <td :class="c in r.data ? '' : 'text-secondary'" x-text="fmt(r.data[c])"></td>
+                    </template>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+</div>
+
+<partial name="_Pager" model="Model.Pager" />

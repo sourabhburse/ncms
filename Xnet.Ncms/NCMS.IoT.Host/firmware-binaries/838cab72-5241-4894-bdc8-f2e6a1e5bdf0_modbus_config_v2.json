@@ -1,0 +1,276 @@
+{
+  "site_name": "Pune Test",
+  "site_id": 4,
+  "groups": [
+    {
+      "group_id": 1,
+      "group_name": "mynamegroup1",
+      "schedule_cron1": "*/30 * * * * *"
+    },
+    {
+      "group_id": 2,
+      "group_name": "mynamegroup2",
+      "schedule_cron1": "*/15 * * * * *"
+    },
+    {
+      "group_id": 3,
+      "group_name": "mynamegroup3",
+      "schedule_cron1": "*/40 * * * * *"
+    }
+  ],
+  "modbus_devices": [
+    {
+      "device_id": 4,
+      "device_name": "Cl",
+      "device_type": "Cl Meter",
+      "make": "Clorine",
+      "modbus_slave_id": 4,
+      "plc_slave_id": 1,
+      "uart_name": "UART2",
+      "baud": 9600,
+      "data_bits": 8,
+      "parity": "N",
+      "stopbits": 1,
+      "modbus_connection": "UART1-19200-8-N-1",
+      "site_id": 4,
+      "site_name": "MVS-RCL",
+      "send_json_data": 1,
+      "is_aio_device": 0,
+      "queries": [
+        {
+          "group_id": 2,
+          "modbus_query_id": 1,
+          "modbus_start_address": 0,
+          "modbus_register_count": 10,
+          "function": 3,
+          "plc_start_address": 1,
+          "schedule_cron": "0 */1 * * * *",
+          "registers": [
+            {
+              "name": "AI1",
+              "address": 0,
+              "data_type": "float_cdab",
+              "plc_address": 3,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 1,
+              "scaling_b": 0
+            },
+            {
+              "name": "AI2",
+              "address": 2,
+              "data_type": "float_cdab",
+              "plc_address": 5,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 1,
+              "scaling_b": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "device_id": 5,
+      "device_name": "Flow",
+      "device_type": "Flow Meter",
+      "make": "Adept",
+      "modbus_slave_id": 2,
+      "plc_slave_id": 1,
+      "uart_name": "UART2",
+      "baud": 9600,
+      "data_bits": 8,
+      "parity": "N",
+      "stopbits": 1,
+      "modbus_connection": "UART2-9600-8-N-1",
+      "site_id": 5,
+      "site_name": "MVS-FM",
+      "send_json_data": 1,
+      "queries": [
+        {
+          "group_id": 1,
+          "modbus_query_id": 2,
+          "modbus_start_address": 2,
+          "plc_start_address": 1,
+          "modbus_register_count": 2,
+          "function": 4,
+          "schedule_cron": "*/15 * * * * *",
+          "registers": [
+            {
+              "name": "Adept_Volume_Flow",
+              "address": 2,
+              "data_type": "float_cdab",
+              "plc_address": 1,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 3600,
+              "scaling_b": 0
+            }
+          ]
+        },
+        {
+          "group_id": 1,
+          "modbus_query_id": 3,
+          "modbus_start_address": 1000,
+          "plc_start_address": 1,
+          "modbus_register_count": 4,
+          "function": 3,
+          "schedule_cron": "*/15 * * * * *",
+          "registers": [
+            {
+              "name": "Adept_Positive_Totalizer",
+              "address": 1000,
+              "data_type": "float_cdab",
+              "plc_address": 3,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 1,
+              "scaling_b": 0
+            },
+            {
+              "name": "Adept_Negative_Totalizer",
+              "address": 1002,
+              "data_type": "float_cdab",
+              "plc_address": 5,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 1,
+              "scaling_b": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "device_id": 7,
+      "device_name": "Flow",
+      "device_type": "Flow Meter",
+      "make": "Crone",
+      "modbus_slave_id": 5,
+      "plc_slave_id": 1,
+      "uart_name": "UART2",
+      "baud": 9600,
+      "data_bits": 8,
+      "parity": "N",
+      "stopbits": 1,
+      "modbus_connection": "UART2-9600-8-N-1",
+      "site_id": 5,
+      "site_name": "MVS-FM",
+      "send_json_data": 1,
+      "queries": [
+        {
+          "group_id": 1,
+          "modbus_query_id": 2,
+          "modbus_start_address": 2,
+          "plc_start_address": 1,
+          "modbus_register_count": 2,
+          "function": 4,
+          "schedule_cron": "*/15 * * * * *",
+          "registers": [
+            {
+              "name": "Crone_Volume_Flow",
+              "address": 2,
+              "data_type": "float_cdab",
+              "plc_address": 1,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 3600,
+              "scaling_b": 0
+            }
+          ]
+        },
+        {
+          "group_id": 1,
+          "modbus_query_id": 3,
+          "modbus_start_address": 1000,
+          "plc_start_address": 1,
+          "modbus_register_count": 4,
+          "function": 3,
+          "schedule_cron": "*/15 * * * * *",
+          "registers": [
+            {
+              "name": "Crone_Positive_Totalizer",
+              "address": 1000,
+              "data_type": "float_cdab",
+              "plc_address": 3,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 1,
+              "scaling_b": 0
+            },
+            {
+              "name": "Crone_Negative_Totalizer",
+              "address": 1002,
+              "data_type": "float_cdab",
+              "plc_address": 5,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 1,
+              "scaling_b": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "device_id": 6,
+      "device_name": "Flow",
+      "device_type": "Flow Meter",
+      "make": "SBM",
+      "modbus_slave_id": 10,
+      "plc_slave_id": 1,
+      "uart_name": "UART2",
+      "baud": 9600,
+      "data_bits": 8,
+      "parity": "N",
+      "stopbits": 1,
+      "modbus_connection": "UART2-9600-8-N-1",
+      "site_id": 5,
+      "site_name": "MVS-FM",
+      "send_json_data": 1,
+      "queries": [
+        {
+          "group_id": 1,
+          "modbus_query_id": 2,
+          "modbus_start_address": 2,
+          "plc_start_address": 1,
+          "modbus_register_count": 2,
+          "function": 4,
+          "schedule_cron": "*/15 * * * * *",
+          "registers": [
+            {
+              "name": "SBM_Volume_Flow",
+              "address": 2,
+              "data_type": "float_cdab",
+              "plc_address": 1,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 3600,
+              "scaling_b": 0
+            }
+          ]
+        },
+        {
+          "group_id": 1,
+          "modbus_query_id": 3,
+          "modbus_start_address": 1000,
+          "plc_start_address": 1,
+          "modbus_register_count": 4,
+          "function": 3,
+          "schedule_cron": "*/15 * * * * *",
+          "registers": [
+            {
+              "name": "SBM_Positive_Totalizer",
+              "address": 1000,
+              "data_type": "float_cdab",
+              "plc_address": 3,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 1,
+              "scaling_b": 0
+            },
+            {
+              "name": "SBM_Negative_Totalizer",
+              "address": 1002,
+              "data_type": "float_cdab",
+              "plc_address": 5,
+              "plc_data_type": "float_abcd",
+              "scaling_a": 1,
+              "scaling_b": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

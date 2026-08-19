@@ -1,0 +1,72 @@
+@model NCMS.IoT.Host.Pages.Devices.IndexModel
+@*
+    Results region for the Devices index — the fragment swapped in by the tableController
+    on search/filter/sort/pagination. Rendered on the full page load AND returned on its own
+    for partial (HTML-over-the-wire) updates.
+*@
+@{
+    SortHeaderVm Sortable(string key, string label) => new()
+    {
+        Key = key,
+        Label = label,
+        CurrentSort = Model.Sort,
+        PageName = "/Devices/Index",
+        RouteValues = Model.FilterRouteValues()
+    };
+}
+<div class="card">
+    <div id="advanced-table">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th class="w-1">#</th>
+                        <th><partial name="_SortHeader" model='Sortable("serial", "Serial Number")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("status", "Status")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("firmware", "Firmware")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("agent", "Agent")' /></th>
+                        <th>WAN IP</th>
+                        <th>MAC Addresses</th>
+                        <th><partial name="_SortHeader" model='Sortable("lastSeen", "Last Seen")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("activated", "Activated")' /></th>
+                    </tr>
+                </thead>
+                <tbody class="table-tbody">
+                    @{ var idx = (Model.Result.PageNumber - 1) * Model.Result.PageSize; }
+                    @foreach (var d in Model.Result.Items)
+                    {
+                        idx++;
+                        // Presence (Online/Offline) comes from IsOnline — the live heartbeat-derived
+                        // flag maintained by the presence reaper — NOT the d.Status lifecycle string.
+                        var presence = d.IsOnline ? "Online" : "Offline";
+                        <tr>
+                            <td class="text-secondary">@idx</td>
+                            <td>
+                                <a asp-page="/Devices/Details" asp-route-id="@d.Id" class="font-monospace">@Format.OrDash(d.SerialNumber)</a>
+                            </td>
+                            <td>
+                                <span class="badge bg-@(d.IsOnline ? "green" : "red")-lt">@presence</span>
+                            </td>
+                            <td>@Format.OrDash(d.FirmwareVersion)</td>
+                            <td>@Format.OrDash(d.AgentVersion)</td>
+                            <td><span class="font-monospace">@Format.OrDash(d.WanIpAddress)</span></td>
+                            <td class="text-secondary small">@Format.Macs(d.MacAddresses)</td>
+                            <td class="text-nowrap">@Format.DateTime(d.LastSeenAt)</td>
+                            <td class="text-nowrap">@Format.DateTime(d.ActivatedAt)</td>
+                        </tr>
+                    }
+                    @if (Model.Result.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-secondary py-4">
+                                No devices match the current filters.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @{ var pager = PagerInfo.From(Model.Result, "/Devices/Index", Model.FilterRouteValues(), "center", Model.PageSizeOptions); }
+    <partial name="_Pager" model="pager" />
+</div>

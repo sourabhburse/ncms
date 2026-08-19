@@ -1,0 +1,335 @@
+﻿/* ============================================
+   NAV — uses existing app design tokens
+   (--primary-color, --foreground, --border-color,
+    --nav-width, --text-*, dark mode via [data-dark-mode])
+   ============================================ */
+:root {
+    /* --- Colors --- */
+    --primary-color: #0061FC; /* active link, hover states, accents */
+    --primary-light: color-mix(in srgb, var(--primary-color) 10%, var(--foreground));
+    --primary-dark: color-mix(in srgb, var(--primary-color) 75%, black);
+    --primary-shade: rgba(var(--primary-rgb), .03);
+    --primary-rgb: 97, 252, 1; /* NOTE: seems mismatched vs --primary-color in source, but that's how it's defined */
+
+    --foreground: #FFFFFF; /* nav background, card backgrounds */
+    --background: #F8F8F8; /* page background */
+    --background-rgb: 248, 248, 248;
+    --text-dark: #333333; /* headings, active group titles */
+    --text-main: #666666; /* default nav link text */
+    --text-light: #72727F; /* muted text */
+
+    --border-color: #E4E4E4; /* nav borders, dividers */
+    --border-input: var(--border-color);
+    --border-color-hex: var(--border-color);
+    --highlight: rgba(var(--primary-rgb), .05); /* hover backgrounds */
+    --shadow-color: rgba(145, 160, 170, .2);
+    --shadow: 0px 4px 18px var(--shadow-color); /* flyout submenu shadow */
+    /* --- Spacing / sizing --- */
+    --nav-width: 18rem; /* expanded sidebar width */
+    --border-radius: 6px; /* flyout, buttons, cards */
+    --spacing-xs: .25rem;
+    --spacing-sm: .5rem;
+    --spacing-base: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    /* --- Typography --- */
+    --text-xs: .75rem;
+    --text-sm: .875rem; /* nav link / title font size */
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    /* --- Layout --- */
+    --header-height: 3.5rem;
+    --breadcrumbs-height: 2.5rem;
+    --scrollbar-width: 5px;
+}
+.app-nav {
+    top: 0;
+    bottom: 0;
+    position: fixed;
+    z-index: 10;
+    background: var(--foreground);
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    border-right: 1px solid var(--border-color);
+    width: var(--nav-width);
+    overflow: auto;
+}
+
+.app-nav .nav-item-wrapper {
+    flex-grow: 1;
+}
+
+    /* ---------- Logo ---------- */
+.app-nav .nav-logo {
+    height: 4rem;
+    flex: none;
+    display: block;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.app-nav .nav-logo img {
+    height: 100%;
+    max-width: 100%;
+    opacity: 1;
+    transform-origin: left center;
+}
+
+    /* ---------- Group title row ---------- */
+.app-nav .nav-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    height: 4rem;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    color: inherit;
+    font-size: var(--text-sm);
+}
+
+.app-nav .nav-title-wrapper:hover,
+.app-nav .nav-list-item:hover {
+    color: var(--primary-color);
+    border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+}
+
+.app-nav .nav-title-wrapper .nav-title {
+    flex-grow: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+    .app-nav .nav-title-wrapper .nav-toggle-icon {
+        flex: none;
+        transition: transform .2s;
+        font-size: .75rem;
+        line-height: 1;
+    }
+
+    .app-nav .nav-item-icon {
+        flex: none;
+        margin-left: .5rem;
+        font-size: 1.125rem;
+        line-height: 1;
+    }
+
+    /* Group open state (toggled via Alpine :class) */
+    .app-nav .nav-group.is-open .nav-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .app-nav .nav-group:has(.link-active) .nav-title-wrapper,
+    .app-nav .nav-group-title {
+        color: var(--primary-color);
+    }
+
+    /* ---------- Sub-list items ---------- */
+    .app-nav .nav-group-list {
+        padding-top: .5rem;
+        padding-bottom: .5rem;
+        padding-left: calc(2.0625rem - 1px);
+    }
+
+    .app-nav .nav-list-item {
+        display: block;
+        padding: .5rem 1rem .5rem 1.5rem;
+        border-left: 3px solid var(--border-color);
+        cursor: pointer;
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        text-decoration: none;
+    }
+
+        .app-nav .nav-list-item.link-active,
+        .app-nav .nav-list-item.link-active:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+    .app-nav .nav-group-title {
+        display: none;
+        margin-bottom: 1rem;
+        padding-top: .5rem;
+    }
+
+    /* ---------- Bottom collapse toggle ---------- */
+    .app-nav .nav-toggle {
+        align-items: center;
+        height: 4rem;
+        padding: 1.5rem;
+        flex: none;
+        cursor: pointer;
+        border-top: 1px solid var(--border-color);
+    }
+
+        .app-nav .nav-toggle .base-icon {
+            transition: .2s transform;
+            transform: rotate(90deg);
+        }
+
+        .app-nav .nav-toggle:hover .base-icon {
+            color: var(--primary-color);
+        }
+
+    /* ============================================
+   COLLAPSED (icon-rail) STATE
+   ============================================ */
+    .app-nav.is-collapsed:not(.mobile-open) {
+        width: auto;
+        overflow: visible;
+    }
+
+        .app-nav.is-collapsed:not(.mobile-open) .nav-logo {
+            width: 4rem;
+        }
+
+        .app-nav.is-collapsed:not(.mobile-open) .nav-toggle .base-icon {
+            transform: rotate(-90deg);
+        }
+
+        .app-nav.is-collapsed:not(.mobile-open) .nav-title,
+        .app-nav.is-collapsed:not(.mobile-open) .nav-toggle-icon {
+            display: none;
+        }
+
+        .app-nav.is-collapsed:not(.mobile-open) .nav-group-title {
+            display: block;
+        }
+
+        .app-nav.is-collapsed:not(.mobile-open) .nav-group {
+            position: relative;
+        }
+
+            .app-nav.is-collapsed:not(.mobile-open) .nav-group:hover .nav-item-icon {
+                color: var(--primary-color);
+            }
+
+        .app-nav.is-collapsed:not(.mobile-open) .nav-group-list {
+            position: absolute;
+            opacity: 0;
+            z-index: -1;
+            pointer-events: none;
+            visibility: hidden;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            background: var(--foreground);
+            left: 100%;
+            top: 0;
+            margin-left: .5rem;
+            padding: 1rem 1rem 1rem 1.5rem;
+            white-space: nowrap;
+            box-shadow: var(--shadow);
+            transition: opacity .15s ease;
+        }
+
+            .app-nav.is-collapsed:not(.mobile-open) .nav-group-list:after {
+                display: block;
+                content: "";
+                width: 1rem;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                left: -1rem;
+            }
+
+        .app-nav.is-collapsed:not(.mobile-open) .nav-group:hover .nav-group-list {
+            opacity: 1;
+            z-index: 1;
+            pointer-events: all;
+            visibility: visible;
+        }
+
+/* ============================================
+   MOBILE
+   ============================================ */
+.mobile-nav-toggle {
+    display: none;
+    line-height: 1;
+    border: 0;
+    background: transparent;
+    color: var(--text-base, var(--text-main));
+    cursor: pointer;
+    padding: 0;
+}
+
+@media screen and (max-width: 999px) {
+    .app-nav {
+        position: fixed;
+        transform-origin: top left;
+        top: 0;
+        width: 100%;
+        bottom: 0;
+        transform: scale(0);
+        pointer-events: none;
+        opacity: 0;
+        transition: all .2s;
+        display: block;
+        z-index: 12;
+        border-radius: 50%;
+        contain: content;
+        will-change: transform;
+        padding: 0;
+        background: var(--foreground);
+    }
+
+        .app-nav.mobile-open {
+            transform: scale(1);
+            opacity: 1;
+            border-radius: 0;
+            pointer-events: initial;
+            overflow: auto;
+            height: auto;
+            padding-bottom: 3em;
+        }
+
+            .app-nav.mobile-open .nav-logo {
+                position: sticky;
+                top: 0;
+                background: var(--foreground);
+                opacity: 1;
+                z-index: 12;
+                width: 100%;
+            }
+
+        .app-nav .nav-toggle {
+            display: none;
+        }
+
+    .mobile-nav-toggle {
+        display: block;
+        top: .8rem;
+        left: .3rem;
+        z-index: 12;
+        position: sticky;
+        margin-bottom: -2.1rem;
+    }
+}
+
+.app-nav .nav-title-wrapper:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+.app-nav .nav-title-wrapper:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ============================================
+   MAIN CONTENT OFFSET (matches .main-layout grid)
+   ============================================ */
+.main-content.open-nav {
+    padding-left: calc(var(--nav-width) - 2rem);
+}

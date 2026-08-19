@@ -1,0 +1,115 @@
+@using NCMS.IoT.Identity.Contracts.Services
+@inject NCMS.IoT.Host.Application.Abstractions.INavigationMenuProvider MenuProvider
+@inject ICurrentUser CurrentUser
+@{
+    var currentPage = (ViewContext.RouteData.Values["page"]?.ToString() ?? "/").ToLowerInvariant();
+
+    bool IsVisible(NCMS.IoT.Host.Application.Abstractions.NavigationMenuItem item) =>
+        item.RequiredPermission is null || CurrentUser.HasPermission(item.RequiredPermission);
+
+    // Leaf items are filtered by their own permission; a group is a group by construction
+    // (its Children list is never null, even once emptied), so it's kept for the next step
+    // rather than mistaken for a permission-less leaf.
+    var items = MenuProvider.GetItems()
+        .Where(item => item.Children is not null || IsVisible(item))
+        .Select(item => item.Children is not null
+            ? item with { Children = item.Children.Where(IsVisible).ToList() }
+            : item)
+        .Where(item => item.Children is null || item.Children.Count > 0)
+        .ToList();
+
+    bool IsActiveItem(NCMS.IoT.Host.Application.Abstractions.NavigationMenuItem item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.ActivePrefix))
+            return currentPage.StartsWith(item.ActivePrefix.ToLowerInvariant());
+        return currentPage == item.Page.ToLowerInvariant();
+    }
+}
+
+<div class="sticky-top">
+    <header class="navbar navbar-expand-md sticky-top d-print-none" data-bs-theme="dark">
+        <div class="container-xl">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand d-none-navbar-horizontal pe-0 pe-md-3" asp-page="/Index">
+                <img src="@NCMS.IoT.Host.Models.Settings.Logo"
+                     alt="@NCMS.IoT.Host.Models.Settings.App"
+                     class="navbar-brand-image" style="height:3rem;width:auto" />
+            </a>
+
+            @if (CurrentUser.IsAuthenticated)
+            {
+                <div class="navbar-nav flex-row order-md-last">
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link d-flex lh-1 text-white p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                            <span class="avatar avatar-sm bg-secondary-lt">@GetInitials(CurrentUser.UserName)</span>
+                            <div class="d-none d-xl-block ps-2">
+                                <div>@(CurrentUser.UserName ?? CurrentUser.Email)</div>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                            <span class="dropdown-item-text text-secondary small">@CurrentUser.Email</span>
+                            <div class="dropdown-divider"></div>
+                            <form method="post" asp-page="/Account/Logout">
+                                <button type="submit" class="dropdown-item">Sign out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </header>
+
+    <div class="navbar-expand-md">
+        <div class="collapse navbar-collapse" id="navbar-menu">
+            <div class="navbar navbar-light" data-bs-theme="light">
+                <div class="container-xl">
+                    <ul class="navbar-nav">
+                        @for (var i = 0; i < items.Count; i++)
+                        {
+                            var item = items[i];
+                            if (!item.HasChildren)
+                            {
+                                <li class="nav-item @(IsActiveItem(item) ? "active" : "")">
+                                    <a class="nav-link" asp-page="@item.Page">
+                                        <span class="nav-link-icon d-md-none d-lg-inline-block"><icon name="@item.Icon" /></span>
+                                        <span class="nav-link-title">@item.Title</span>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                var open = item.Children!.Any(IsActiveItem);
+                                <li class="nav-item dropdown @(open ? "active" : "")">
+                                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"
+                                       data-bs-auto-close="true" role="button" aria-expanded="false">
+                                        <span class="nav-link-icon d-md-none d-lg-inline-block"><icon name="@item.Icon" /></span>
+                                        <span class="nav-link-title">@item.Title</span>
+                                    </a>
+                                    <div class="dropdown-menu">
+                                        @foreach (var child in item.Children!)
+                                        {
+                                            <a class="dropdown-item @(IsActiveItem(child) ? "active" : "")" asp-page="@child.Page">
+                                                @child.Title
+                                            </a>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(['.', ' ', '@'], StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 0 ? "?" : string.Concat(parts.Take(2).Select(p => char.ToUpperInvariant(p[0])));
+    }
+}

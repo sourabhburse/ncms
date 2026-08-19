@@ -1,0 +1,531 @@
+/* Hide Alpine-bound elements until Alpine initializes. */
+[x-cloak] {
+    display: none !important;
+}
+
+
+
+html {
+    font-size: 11px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+/* Sharper text rendering to match the smaller base size. */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+:root {
+    --tblr-border-radius-scale: 0.5;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+.page-header-card {
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top right, rgba(var(--tblr-primary-rgb), 0.12), transparent 42%),
+        linear-gradient(135deg, rgba(var(--tblr-primary-rgb), 0.04), rgba(var(--tblr-info-rgb), 0.05));
+}
+
+.page-header-card .card-title {
+    letter-spacing: -0.02em;
+}
+
+.page-header-card__visual {
+    min-height: 100%;
+    background:
+        linear-gradient(160deg, rgba(var(--tblr-primary-rgb), 0.12), rgba(var(--tblr-primary-rgb), 0.02));
+    border-left: 1px solid rgba(var(--tblr-border-color-rgb, 222, 226, 230), 0.7);
+}
+
+.page-header-card__icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 6.5rem;
+    height: 6.5rem;
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--tblr-primary);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.04);
+}
+
+.letter-spacing-wide {
+    letter-spacing: 0.12em;
+}
+
+@media (max-width: 767.98px) {
+    .page-header-card__visual {
+        min-height: 7rem;
+        border-left: 0;
+        border-top: 1px solid rgba(var(--tblr-border-color-rgb, 222, 226, 230), 0.7);
+    }
+
+    .page-header-card__icon-wrap {
+        width: 5rem;
+        height: 5rem;
+        border-radius: 1.25rem;
+    }
+}
+.btn {
+    transition: .1s;
+    --tblr-btn-padding-y: 0.5rem;
+}
+
+/* Sidebar: 16px padding on all sides of each nav item link.
+   Selector matches Tabler's own specificity (.navbar-vertical.navbar-expand-lg
+   .navbar-collapse .navbar-nav .nav-link) so it wins by load order. */
+.navbar-vertical.navbar-expand-lg .navbar-collapse .navbar-nav .nav-link {
+    padding: 16px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+
+.btn-square-primary {
+    --tblr-btn-color: var(--tblr-primary);
+    --tblr-btn-hover-color: var(--tblr-primary);
+    --tblr-btn-active-color: var(--tblr-primary);
+    --tblr-btn-focus-shadow-rgb: var(--tblr-primary-rgb);
+}
+
+.btn-square-secondary {
+    --tblr-btn-color: var(--tblr-secondary);
+    --tblr-btn-hover-color: var(--tblr-secondary);
+    --tblr-btn-active-color: var(--tblr-secondary);
+    --tblr-btn-focus-shadow-rgb: var(--tblr-secondary-rgb);
+}
+
+.btn-square-danger {
+    --tblr-btn-color: var(--tblr-danger);
+    --tblr-btn-hover-color: var(--tblr-danger);
+    --tblr-btn-active-color: var(--tblr-danger);
+    --tblr-btn-active-bg: rgba(var(--tblr-danger-rgb),0.04);
+    --tblr-btn-active-border-color: var(--tblr-danger)
+}
+
+/* Dashed drag-and-drop file upload area (e.g. hardware inventory import). */
+.upload-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 2.5rem 1rem;
+    border: 2px dashed #dcdfe6;
+    border-radius: var(--tblr-border-radius);
+    color: var(--tblr-secoundary);
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.15s ease;
+}
+
+.upload-dropzone:hover {
+    background-color: rgba(var(--tblr-primary-rgb), 0.03);
+    border: 2px dashed var(--tblr-primary);
+}
+/* The real file input overlays the whole zone so click + drag-drop both work. */
+.upload-dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Link buttons: heavier weight + no underline on hover/focus. */
+.btn-link {
+    font-weight: 600;
+}
+
+.btn-link:focus-visible,
+.btn-link:hover {
+    text-decoration: none;
+}
+
+/* Link buttons only: drop Tabler's fill + border on the active/pressed state so
+   they don't flash a background/border when clicked. Mirrors Tabler's active-state
+   selector (scoped to .btn-link); only background-color and border-color are
+   overridden â€” text colour and focus shadow are left intact. */
+.btn-check:checked + .btn-link,
+.btn-link.active,
+.btn-link.show,
+.btn-link:first-child:active,
+:not(.btn-check) + .btn-link:active {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* Hovered link buttons: no background flash, and a per-class hover colour â€” a
+   lighter tint of each button's own hue so the action stays recognisable while
+   giving hover feedback. !important beats the .text-* utilities (which set colour
+   with !important). */
+.btn-link:hover {
+    background-color: transparent;
+}
+
+.btn-link.text-primary:hover {   /* View   */
+    color: #4dabf7 !important;
+}
+
+.btn-link.text-success:hover {   /* Enable */
+    color: #51cf66 !important;
+}
+
+.btn-link.text-warning:hover {   /* Disable */
+    color: #ffc848 !important;
+}
+
+.btn-link.text-secondary:hover { /* Copy / Edit */
+    color: #adb5bd !important;
+}
+
+.btn-link.text-danger:hover {    /* Delete */
+    color: #ff6b6b !important;
+}
+
+/* â”€â”€ Tailwind-style utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   This project uses Bootstrap/Tabler, which has no flex-1 / space-x-* / ml-* /
+   bare flex classes. These mirror the Tailwind equivalents used in the device
+   filter bar so that markup works. (Bootstrap analogues: flex-fill, d-flex,
+   ms-2, gap-2.) */
+.flex {
+    display: flex;
+}
+
+.flex-1 {
+    flex: 1 1 0%;
+    min-width: 0;
+}
+
+.ml-2 {
+    margin-left: 0.5rem;
+}
+
+.space-x-2 > * + * {
+    margin-left: 0.5rem;
+}
+
+/* Two columns: the search-form column grows and may shrink (min-width:0 so it
+   never pushes into the buttons); the button-area column is fixed-width and
+   never shrinks/grows â€” so the inputs can't overlap the buttons. */
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.search-form > .form-control,
+.search-form > .form-select {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.button-area {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+/* Remove Tabler default box shadows globally */
+:root {
+    --tblr-box-shadow: none;
+    --tblr-box-shadow-sm: none;
+    --tblr-box-shadow-lg: none;
+    --tblr-shadow-input: none;
+}
+
+.form-control,
+.form-select,
+.form-check-input,
+.form-range::-webkit-slider-thumb,
+.form-range::-moz-range-thumb,
+.img-thumbnail,
+.card,
+.dropdown-menu,
+.modal-content,
+.alert,
+.popover,
+.tooltip {
+    box-shadow: none !important;
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-range:focus::-webkit-slider-thumb,
+.form-range:focus::-moz-range-thumb {
+    box-shadow: 0 0 0 .25rem rgba(var(--tblr-primary-rgb), .25) !important;
+}
+
+.form-check-input:focus {
+    box-shadow: none !important;
+}
+
+
+#toast-container.toast-center {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+}
+
+#toast-container.toast-center > div {
+    /* width:auto on a block element fills the container instead of shrink-wrapping —
+       fit-content is what actually sizes the toast to its message, while still
+       respecting min/max-width as clamps (not toastr's fixed 300px default). */
+    width: fit-content;
+    min-width: 9rem;              /* enough for a short word without looking clipped */
+    max-width: min(90vw, 34rem);  /* expand for long messages, but cap for readability */
+    margin: 0 auto 0.75rem;
+    opacity: 1;                   /* toastr defaults to .8 â€” keep it fully readable */
+    border-radius: var(--tblr-border-radius);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12);
+}
+
+#toast-container.toast-center > div .toast-message {
+    word-break: break-word;       /* wrap long comma-separated serial lists cleanly */
+}
+
+/* â”€â”€ Subtle, faded toast colours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Replace toastr's solid backgrounds with soft Tabler-style tints: a light faded
+   fill + a coloured left accent per type, with dark readable text. toastr's white
+   icon is dropped (invisible on a light fill), so the left padding shrinks too. */
+#toast-container > div {
+    padding: 0.8rem 1rem;                        /* was 15px 15px 15px 50px (icon gutter) */
+    color: var(--tblr-body-color);
+    background-color: #fff;
+    border: none;
+}
+
+/* Remove toastr's white SVG type icons from ALL toasts. This MUST match the specificity of
+   toastr's own icon rules (#toast-container > .toast-success etc. = id+class); a plain
+   '#toast-container > div' rule is lower specificity and loses even with !important. */
+#toast-container > .toast-success,
+#toast-container > .toast-error,
+#toast-container > .toast-info,
+#toast-container > .toast-warning {
+    background-image: none !important;
+}
+
+/* No type label (e.g. "Success"/"Error") on any toast — the tinted background
+   and text colour already communicate the type; the message alone is shown. */
+#toast-container > div .toast-title { display: none; }
+
+/* Tinted toast colours: a light, fully OPAQUE background per type (matching
+   the badge -lt tint used elsewhere) with the type's saturated base colour
+   for text/title, for clear recognition without the weight of a solid fill.
+   Hardcoded opaque rgb — the --tblr-*-lt variables resolve via
+   color-mix(..., transparent) in modern browsers, which carries real alpha
+   and lets whatever's behind the toast bleed through/double-expose text. */
+#toast-container > div.toast-success {
+    background-color: rgb(234, 247, 236);
+    color: var(--tblr-success);
+}
+#toast-container > div.toast-success .toast-title { color: var(--tblr-success); }
+
+#toast-container > div.toast-warning {
+    background-color: rgb(254, 245, 230);
+    color: var(--tblr-warning);
+}
+#toast-container > div.toast-warning .toast-title { color: var(--tblr-warning); }
+
+#toast-container > div.toast-error {
+    background-color: rgb(251, 235, 235);
+    color: var(--tblr-danger);
+}
+#toast-container > div.toast-error .toast-title { color: var(--tblr-danger); }
+
+#toast-container > div.toast-info {
+    background-color: rgb(236, 245, 252);
+    color: var(--tblr-info);
+}
+#toast-container > div.toast-info .toast-title { color: var(--tblr-info); }
+#advanced-table{
+    padding : 4px 20px;
+}
+/* Progress bar: a thin accent in each toast's own type colour. */
+#toast-container > div .toast-progress {
+    opacity: 0.6;
+}
+#toast-container > div.toast-success .toast-progress { background-color: var(--tblr-success); }
+#toast-container > div.toast-warning .toast-progress { background-color: var(--tblr-warning); }
+#toast-container > div.toast-error   .toast-progress { background-color: var(--tblr-danger); }
+#toast-container > div.toast-info    .toast-progress { background-color: var(--tblr-info); }
+
+/* ── Hidden scrollbars ────────────────────────────────────────────────────
+   Every overflow:auto/scroll region (e.g. .table-responsive, the Device Details
+   tab strip, modal bodies) still scrolls via wheel/touchpad/touch/keyboard/drag —
+   only the visual scrollbar track+thumb is removed. */
+/* Firefox */
+* {
+    scrollbar-width: thin;
+}
+
+/* WebKit / Chromium (Chrome, Edge, Safari) */
+/*::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}*/
+
+/* IE/legacy Edge */
+* {
+    -ms-overflow-style: none;
+}
+
+/* ── Table loading overlay ────────────────────────────────────────────────
+   tableController (site.js) toggles the opacity-50 + pe-none classes on
+   #results while a search/sort/paginate/page-size request is in flight. This
+   layers a spinner on top purely via CSS, keyed off those same two classes —
+   every list page that uses tableController gets it automatically, with no
+   per-page markup. */
+#results {
+    position: relative;
+}
+
+#results.opacity-50.pe-none {
+    min-height: 6rem;
+}
+
+#results.opacity-50.pe-none::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2rem;
+    height: 2rem;
+    margin: -1rem 0 0 -1rem;
+    border: 0.2rem solid rgba(var(--tblr-primary-rgb), 0.25);
+    border-top-color: var(--tblr-primary);
+    border-radius: 50%;
+    animation: table-loading-spin 0.6s linear infinite;
+}
+
+@keyframes table-loading-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Initial-load table loader ─────────────────────────────────────────────
+   tableController (site.js) hides #results' server-rendered content behind
+   this class on first mount and re-fetches the same URL over AJAX, so the
+   table only reveals its rows once that fetch resolves — the same centered
+   loader as any other refresh, not a flash of content before JS attaches.
+   .table-init-spinner is injected by site.js; visibility:visible overrides
+   the inherited hidden state from its #results.initial-hide parent. */
+#results.initial-hide {
+    visibility: hidden;
+    min-height: 6rem;
+}
+
+.table-init-spinner {
+    display: none;
+    visibility: visible;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2rem;
+    height: 2rem;
+    margin: -1rem 0 0 -1rem;
+    border: 0.2rem solid rgba(var(--tblr-primary-rgb), 0.25);
+    border-top-color: var(--tblr-primary);
+    border-radius: 50%;
+    animation: table-loading-spin 0.6s linear infinite;
+}
+
+#results.initial-hide .table-init-spinner {
+    display: block;
+}
+
+/* ── Generic loading-region overlay ────────────────────────────────────────
+   Same centered-spinner treatment as the main tables above, but reusable on
+   any container (modal bodies, device pickers, dropdowns) via a plain class
+   toggle instead of the #results id — bind `:class="{ 'is-loading': loading }"`
+   on an element with class="loading-region" and this handles the rest. */
+.loading-region {
+    position: relative;
+    min-height: 3rem;
+}
+
+.loading-region.is-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.loading-region.is-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: -0.875rem 0 0 -0.875rem;
+    border: 0.2rem solid rgba(var(--tblr-primary-rgb), 0.25);
+    border-top-color: var(--tblr-primary);
+    border-radius: 50%;
+    animation: table-loading-spin 0.6s linear infinite;
+}
+
+/* ── Global page-navigation loader (NProgress-style) ──────────────────────
+   Driven entirely by site.js; no per-page markup. */
+#page-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--tblr-primary);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ── Consistent scrollable-table design ────────────────────────────────────
+   Tabler's .table-responsive wrapper is already used everywhere in this app
+   (main index pages, modal device pickers, Certificates, telemetry history,
+   Dashboard) — so a single rule here caps every table's height and lets the
+   body scroll independently, with the header pinned, across the whole app
+   with no per-page markup changes.
+
+   Modal-embedded tables that already set an inline max-height/min-height
+   (e.g. the Select-Device pickers, style="max-height: 22rem") keep that
+   value — inline styles win over this class default — this only supplies
+   the *default* height cap for tables that don't specify their own (the
+   main list/result tables and simple ones like Certificates/telemetry). */
+.table-responsive {
+    max-height: 60vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}

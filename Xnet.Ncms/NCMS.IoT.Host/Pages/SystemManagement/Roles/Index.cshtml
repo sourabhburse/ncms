@@ -1,0 +1,330 @@
+@page
+@using NCMS.IoT.Identity.Contracts.Permissions
+@model NCMS.IoT.Host.Pages.SystemManagement.Roles.IndexModel
+@{
+    ViewData["Title"] = "Role Manage";
+    ViewData["Pretitle"] = "System Management";
+    ViewData["Purpose"] = "Create and manage roles, and assign or revoke their permissions.";
+    ViewData["HeaderIcon"] = "shield-lock";
+
+    var pager = new NCMS.IoT.Host.Models.PagerInfo
+    {
+        Page = Model.Result.PageNumber,
+        PageSize = Model.Result.PageSize,
+        Total = (int)Model.Result.TotalCount,
+        PageName = "/SystemManagement/Roles/Index",
+        PageSizeOptions = Model.PageSizeOptions,
+        Query = Model.FilterRouteValues()
+    };
+}
+
+<div x-data="rolesPage()">
+
+    <!-- ── Filter bar ───────────────────────────────────────────────────── -->
+    <form method="get">
+        <input type="hidden" name="pageSize" value="@Model.PageSize" />
+        <div class="card card-sm mb-3">
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 align-items-end">
+                    <div style="min-width:260px;flex:1 1 300px;">
+                        <label class="form-label small text-secondary mb-1">Search</label>
+                        <input type="text" name="search" value="@Model.Search" class="form-control form-control-sm"
+                               placeholder="Role name or description" />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-sm btn-primary">Search</button>
+                        <a asp-page="/SystemManagement/Roles/Index" class="btn btn-sm btn-outline-secondary">Reset</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="btn-list">
+                <button type="button" class="btn btn-primary" asp-permission="@IdentityPermissions.Roles.Add" data-bs-toggle="modal" data-bs-target="#modal-create">
+                    <i class="ti ti-plus me-1"></i>Add Role
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Permissions granted</th>
+                        <th class="text-center col-actions">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Result.Items)
+                    {
+                        var granted = Model.Permissions.TryGetValue(r.Id, out var rp)
+                            ? rp.Permissions.Count(p => p.Granted) : 0;
+                        <tr>
+                            <td>@r.Name</td>
+                            <td>@r.Description</td>
+                            <td>@granted</td>
+                            <td class="text-center text-nowrap col-actions">
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <button type="button" class="btn btn-link btn-sm p-1 text-primary"
+                                            asp-permission="@IdentityPermissions.Roles.Edit"
+                                            data-bs-toggle="modal" data-bs-target="#modal-permissions"
+                                            data-id="@r.Id" data-name="@r.Name"
+                                            @@click="openPermissions($el)">Permissions</button>
+                                    <button type="button" class="btn btn-link btn-sm p-1 text-secondary"
+                                            asp-permission="@IdentityPermissions.Roles.Edit"
+                                            data-bs-toggle="modal" data-bs-target="#modal-edit"
+                                            data-id="@r.Id" data-name="@r.Name" data-description="@r.Description"
+                                            @@click="openEdit($el)">Edit</button>
+                                    <button type="button" class="btn btn-link btn-sm p-1 text-danger"
+                                            asp-permission="@IdentityPermissions.Roles.Delete"
+                                            data-id="@r.Id" data-name="@r.Name"
+                                            @@click="openDelete($el)">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Result.Items.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center text-secondary py-4">No roles found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Pager" model="pager" />
+    </div>
+
+    <!-- ── Create modal ─────────────────────────────────────────────────── -->
+    <div class="modal modal-blur fade" id="modal-create" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <form class="modal-content" method="post" asp-page-handler="Create">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label required">Name</label>
+                        <input name="Name" class="form-control" required maxlength="128" autocomplete="off" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Description</label>
+                        <textarea name="Description" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Edit modal ───────────────────────────────────────────────────── -->
+    <div class="modal modal-blur fade" id="modal-edit" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <form class="modal-content" method="post" asp-page-handler="Edit">
+                <input type="hidden" name="Id" x-model="edit.id" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label required">Name</label>
+                        <input name="Name" class="form-control" required maxlength="128" x-model="edit.name" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Description</label>
+                        <textarea name="Description" class="form-control" rows="2" x-model="edit.description"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Delete form (hidden; submitted after confirmAction() approves) ─── -->
+    <form method="post" asp-page-handler="Delete" x-ref="deleteForm" class="d-none">
+        <input type="hidden" name="id" x-model="del.id" />
+    </form>
+
+        <!-- ── Permission-management modal (one shared form, keyed by roleId) ── -->
+        <div class="modal modal-blur fade" id="modal-permissions" tabindex="-1" asp-permission="@IdentityPermissions.Roles.Edit">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <form class="modal-content" method="post" asp-page-handler="SavePermissions">
+                    <input type="hidden" name="roleId" x-model="perm.roleId" />
+                    <template x-for="p in perm.granted" :key="p">
+                        <input type="hidden" name="permissions" :value="p" />
+                    </template>
+                    <div class="modal-header">
+                        <h5 class="modal-title" x-text="'Permissions — ' + perm.roleName"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="d-flex align-items-center gap-3 px-3 py-2 border-bottom small">
+                            <a href="#" class="link-primary" @@click.prevent="unfoldAll()">Unfold</a>
+                            <a href="#" class="link-primary" @@click.prevent="foldAll()">Fold</a>
+                            <a href="#" class="link-primary" @@click.prevent="checkAll()">Check All</a>
+                            <a href="#" class="link-primary" @@click.prevent="uncheckAll()">Unselect All</a>
+                        </div>
+                        <div class="permission-tree" style="max-height:420px;overflow-y:auto;">
+                            <template x-for="mod in permissionTree" :key="mod.name">
+                                <div>
+                                    <!-- Module row -->
+                                    <div class="d-flex align-items-center gap-2 px-3 py-2 permission-tree-row">
+                                        <a href="#" class="text-secondary lh-1" @@click.prevent="toggleExpand(mod.name)">
+                                            <span class="permission-tree-caret" :class="{ 'rotate-90': isExpanded(mod.name) }">
+                                                <icon name="chevron-right" />
+                                            </span>
+                                        </a>
+                                        <input class="form-check-input m-0" type="checkbox"
+                                               :checked="moduleState(mod) === 'checked'"
+                                               x-effect="$el.indeterminate = (moduleState(mod) === 'partial')"
+                                               @@change="toggleModule(mod, $event.target.checked)" />
+                                        <span class="fw-medium" x-text="mod.name"></span>
+                                    </div>
+
+                                    <!-- Area rows -->
+                                    <template x-if="isExpanded(mod.name)">
+                                        <template x-for="area in mod.areas" :key="mod.name + '|' + area.name">
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2 px-3 py-2 ps-5 permission-tree-row">
+                                                    <a href="#" class="text-secondary lh-1" @@click.prevent="toggleExpand(mod.name + '|' + area.name)">
+                                                        <span class="permission-tree-caret" :class="{ 'rotate-90': isExpanded(mod.name + '|' + area.name) }">
+                                                            <icon name="chevron-right" />
+                                                        </span>
+                                                    </a>
+                                                    <input class="form-check-input m-0" type="checkbox"
+                                                           :checked="areaState(area) === 'checked'"
+                                                           x-effect="$el.indeterminate = (areaState(area) === 'partial')"
+                                                           @@change="toggleArea(area, $event.target.checked)" />
+                                                    <span x-text="area.name"></span>
+                                                </div>
+
+                                                <!-- Action leaves -->
+                                                <template x-if="isExpanded(mod.name + '|' + area.name)">
+                                                    <template x-for="action in area.actions" :key="action.permission">
+                                                        <div class="d-flex align-items-center gap-2 px-3 py-2 ps-7 permission-tree-row">
+                                                            <label class="form-check mb-0 d-flex align-items-center gap-2">
+                                                                <input class="form-check-input m-0" type="checkbox"
+                                                                       :checked="perm.granted.includes(action.permission)"
+                                                                       @@change="toggleLeaf(action.permission, $event.target.checked)" />
+                                                                <span class="form-check-label" x-text="action.action"></span>
+                                                            </label>
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+</div>
+
+<style>
+    .permission-tree-row:hover { background-color: var(--tblr-bg-surface-secondary); }
+    .permission-tree-caret { transition: transform .15s ease; display: inline-block; }
+    .permission-tree-caret.rotate-90 { transform: rotate(90deg); }
+    .ps-7 { padding-left: 3.5rem !important; }
+</style>
+
+@section Scripts {
+<script>
+    const rolePermissions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.Permissions.ToDictionary(
+            kv => kv.Key.ToString(),
+            kv => kv.Value.Permissions.Where(p => p.Granted).Select(p => p.Permission).ToList())));
+
+    // Module -> Area -> Action tree (same shape for every role; only `granted` differs per role).
+    const permissionTree = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.PermissionTree.Select(m => new {
+            name = m.Name,
+            areas = m.Areas.Select(a => new {
+                name = a.Name,
+                actions = a.Actions.Select(x => new { action = x.Action, permission = x.Permission })
+            })
+        })));
+
+    function rolesPage() {
+        return {
+            edit: { id: '', name: '', description: '' },
+            del: { id: '', name: '' },
+            perm: { roleId: '', roleName: '', granted: [] },
+            permissionTree,
+            expanded: {},
+
+            openEdit(el) {
+                const d = el.dataset;
+                this.edit = { id: d.id, name: d.name || '', description: d.description || '' };
+            },
+            openDelete(el) {
+                const id = el.dataset.id, name = el.dataset.name;
+                this.del = { id, name };
+                confirmAction('Confirm Delete', 'Do you want to delete this role?',
+                    () => this.$nextTick(() => this.$refs.deleteForm.requestSubmit()),
+                    { itemName: name });
+            },
+            openPermissions(el) {
+                const roleId = el.dataset.id, roleName = el.dataset.name;
+                this.perm = { roleId, roleName, granted: [...(rolePermissions[roleId] || [])] };
+                this.expanded = {};
+            },
+
+            // ── Tree expand/collapse ────────────────────────────────────────
+            isExpanded(key) { return !!this.expanded[key]; },
+            toggleExpand(key) { this.expanded[key] = !this.expanded[key]; },
+            unfoldAll() {
+                for (const mod of this.permissionTree) {
+                    this.expanded[mod.name] = true;
+                    for (const area of mod.areas) this.expanded[mod.name + '|' + area.name] = true;
+                }
+            },
+            foldAll() { this.expanded = {}; },
+
+            // ── Check/uncheck ────────────────────────────────────────────────
+            moduleLeaves(mod) { return mod.areas.flatMap(a => a.actions.map(x => x.permission)); },
+            areaLeaves(area) { return area.actions.map(x => x.permission); },
+            groupState(leaves) {
+                const checkedCount = leaves.filter(p => this.perm.granted.includes(p)).length;
+                if (checkedCount === 0) return 'unchecked';
+                if (checkedCount === leaves.length) return 'checked';
+                return 'partial';
+            },
+            moduleState(mod) { return this.groupState(this.moduleLeaves(mod)); },
+            areaState(area) { return this.groupState(this.areaLeaves(area)); },
+
+            toggleLeaf(permission, checked) {
+                const idx = this.perm.granted.indexOf(permission);
+                if (checked && idx === -1) this.perm.granted.push(permission);
+                if (!checked && idx !== -1) this.perm.granted.splice(idx, 1);
+            },
+            setLeaves(leaves, checked) {
+                for (const p of leaves) this.toggleLeaf(p, checked);
+            },
+            toggleModule(mod, checked) { this.setLeaves(this.moduleLeaves(mod), checked); },
+            toggleArea(area, checked) { this.setLeaves(this.areaLeaves(area), checked); },
+
+            checkAll() {
+                for (const mod of this.permissionTree) this.setLeaves(this.moduleLeaves(mod), true);
+            },
+            uncheckAll() { this.perm.granted = []; }
+        };
+    }
+</script>
+}

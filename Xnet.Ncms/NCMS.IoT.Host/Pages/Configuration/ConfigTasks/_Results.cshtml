@@ -1,0 +1,76 @@
+@model NCMS.IoT.Host.Pages.Configuration.ConfigTasks.IndexModel
+@using NCMS.IoT.DeviceManagement.Contracts.Permissions
+@*
+    Results region for Config Tasks — swapped in by tableController. Row "View" buttons
+    (@click) bind to the page's `configTasks` component; Alpine re-initialises after each swap.
+*@
+@{
+    var start = (Model.Result.Page - 1) * Model.Result.PageSize;
+
+    SortHeaderVm Sortable(string key, string label) => new()
+    {
+        Key = key,
+        Label = label,
+        CurrentSort = Model.Sort,
+        PageName = "/Configuration/ConfigTasks/Index",
+        RouteValues = Model.FilterRouteValues()
+    };
+}
+<div class="card">
+    <div class="card-body">
+        <div class="btn-list">
+            <button type="button" class="btn btn-primary" asp-permission="@DeviceManagementPermissions.ConfigTasks.Add" @@click="openCreate()">
+                <i class="ti ti-plus me-1"></i>New Config Task
+            </button>
+        </div>
+    </div>
+    <div id="advanced-table">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table table-hover">
+                <thead>
+                    <tr>
+                        <th class="w-1">#</th>
+                        <th><partial name="_SortHeader" model='Sortable("taskNumber", "Task Number")' /></th>
+                        <th>Config Content</th>
+                        <th>Product Model</th>
+                        <th>Config Progress</th>
+                        <th><partial name="_SortHeader" model='Sortable("status", "Status")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("created", "Created Time")' /></th>
+                        <th><partial name="_SortHeader" model='Sortable("completed", "End Time")' /></th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="table-tbody">
+                    @for (var i = 0; i < Model.Result.Items.Count; i++)
+                    {
+                        var t = Model.Result.Items[i];
+                        <tr>
+                            <td class="text-secondary">@(start + i + 1)</td>
+                            <td><span class="font-monospace">@t.TaskNumber</span></td>
+                            <td class="text-truncate" style="max-width: 20rem;">@t.ConfigContent</td>
+                            <td><span class="text-secondary">@Format.OrDash(t.ProductModel)</span></td>
+                            <td><span class="text-blue fw-bold">@t.CompletedDevices/@t.TotalDevices</span></td>
+                            <td><span class="badge @Ui.Badge(t.TaskStatus)">@t.TaskStatus</span></td>
+                            <td class="text-nowrap">@t.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td class="text-nowrap">@(t.EndTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "—")</td>
+                            <td class="text-center text-nowrap">
+                                <button type="button" class="btn btn-link btn-sm p-1 text-primary"
+                                        asp-permission="@DeviceManagementPermissions.ConfigTasks.View"
+                                        @@click="openDetail('@t.Id')">View</button>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Result.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-secondary py-4">
+                                No config tasks yet. Click <strong>New Config Task</strong> to create the first one.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <partial name="_Pager" model="Model.Pager" />
+</div>

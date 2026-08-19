@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_Head"/>
+</head>
+<body>
+    <div class="page">
+        <partial name="_Sidebar"/>
+
+        <div class="page-wrapper">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            @if (ViewData["Pretitle"] is string pretitle)
+                            {
+                                <div class="page-pretitle">@pretitle</div>
+                            }
+                            <h2 class="page-title">@ViewData["Title"]</h2>
+                        </div>
+                        @if (IsSectionDefined("PageActions"))
+                        {
+                            <div class="col-auto ms-auto d-print-none">
+                                <div class="btn-list">
+                                    @await RenderSectionAsync("PageActions", required: false)
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <div class="container-xl">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ScriptsBasePlugins"/>
+    <partial name="_Toastr"/>
+    <partial name="_ConfirmDialog"/>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

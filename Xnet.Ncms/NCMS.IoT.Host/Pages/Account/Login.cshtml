@@ -1,0 +1,97 @@
+@page
+@model NCMS.IoT.Host.Pages.Account.LoginModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Sign in";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_Head" />
+    <style>
+        html, body { height: 100%; }
+        body.auth-body {
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            background-image: url('/images/login_back.png');
+            background-size: cover;
+            background-position: left center;
+            background-repeat: no-repeat;
+        }
+        .auth-shell {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 3rem 10vw;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 23rem;
+            padding: 2.75rem 2.5rem;
+            border-radius: 0;
+            background: #fff;
+        }
+        .auth-logo { height: 2.75rem; margin-bottom: 1rem; }
+        @@media (max-width: 767.98px) {
+            .auth-shell { justify-content: center; padding: 1.5rem; }
+            .auth-card { max-width: 26rem; padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body class="auth-body">
+<div class="auth-shell">
+    <div class="auth-card">
+        <img src="@NCMS.IoT.Host.Models.Settings.Logo" alt="@NCMS.IoT.Host.Models.Settings.App" class="auth-logo">
+        <h2 class="h2 mb-4">Welcome, Login</h2>
+        @* <p class="text-secondary mb-4">Sign in to your account to continue.</p> *@
+
+        <form method="post" asp-route-returnUrl="@Model.ReturnUrl" autocomplete="off" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    <icon name="alert-circle" class="me-1" />@Model.ErrorMessage
+                </div>
+            }
+            <div class="mb-3">
+                @* <label asp-for="Input.Email" class="form-label">Email address</label>
+                <div class="input-group input-group-flat">
+                    <span class="input-group-text"><icon name="mail" /></span>
+                </div> *@
+                <input asp-for="Input.Email" class="form-control form-control-rounded mb-2" placeholder="Email" autofocus />
+                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+            </div>
+            <div class="mb-4">
+                @* <label asp-for="Input.Password" class="form-label">Password</label>
+                <div class="input-group input-group-flat">
+                    <span class="input-group-text"><icon name="lock" /></span>
+                </div> *@
+                <input asp-for="Input.Password" type="password" class="form-control form-control-rounded mb-2" placeholder="Password" />
+                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-check">
+                    <input asp-for="Input.RememberMe" class="form-check-input" type="checkbox" />
+                    <span class="form-check-label">Remember me</span>
+                </label>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-pill btn-primary w-100">
+                    @* <icon name="login" class="me-1" />Sign in *@
+                    <span>Login</span>
+                </button>
+            </div>
+        </form>
+
+        @* <div class="text-secondary text-center mt-4 small">
+            &copy; @DateTime.UtcNow.Year @NCMS.IoT.Host.Models.Settings.App &middot; v@(NCMS.IoT.Host.Models.Settings.Version)
+        </div> *@
+    </div>
+</div>
+<partial name="_ScriptsBasePlugins" />
+<partial name="_ValidationScriptsPartial" />
+</body>
+</html>

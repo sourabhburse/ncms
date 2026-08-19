@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>NCMS.Shared</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- IModule.MapEndpoints uses IEndpointRouteBuilder from ASP.NET Core -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- DependencyInjection.Abstractions + Configuration.Abstractions come from the
+         Microsoft.AspNetCore.App shared framework referenced above; no PackageReference needed. -->
+    <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+</Project>
